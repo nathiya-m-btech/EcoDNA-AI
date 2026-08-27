@@ -4,14 +4,16 @@ import { useLocations, type LocationRow } from "./queries";
 type Ctx = {
   locations: LocationRow[];
   loading: boolean;
-  locationId?: string;
-  location?: LocationRow;
+  locationId: string | undefined;
+  location: LocationRow | undefined;
   setLocationId: (id: string) => void;
 };
 
 const LocationCtx = createContext<Ctx>({
   locations: [],
   loading: true,
+  locationId: undefined,
+  location: undefined,
   setLocationId: () => {},
 });
 
