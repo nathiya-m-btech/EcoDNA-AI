@@ -3,7 +3,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { EcoLogo } from "@/components/eco/logo";
 import { Particles } from "@/components/eco/particles";
 import { Button } from "@/components/ui/button";
@@ -71,14 +70,6 @@ function AuthPage() {
     }
   };
 
-  const google = async () => {
-    try {
-      await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    } catch {
-      toast.error("Google sign-in unavailable right now");
-    }
-  };
-
   return (
     <div className="relative grid min-h-screen place-items-center overflow-hidden px-4 py-12">
       <div className="eco-grid pointer-events-none absolute inset-0 opacity-30" />
@@ -130,13 +121,6 @@ function AuthPage() {
           </Button>
         </form>
 
-        <div className="my-5 flex items-center gap-3 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-          <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
-        </div>
-
-        <Button variant="outline" className="w-full rounded-xl" onClick={google} type="button">
-          Continue with Google
-        </Button>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           {mode === "signin" ? "New to EcoDNA AI?" : "Already registered?"}{" "}
