@@ -14,8 +14,8 @@ export function factorsFromRow(row: EnvDataRow): Factors {
 }
 
 export type LocationInsight = {
-  latest?: EnvDataRow;
-  factors?: Factors;
+  latest: EnvDataRow | undefined;
+  factors: Factors | undefined;
   score: number;
   series: { date: string; score: number; air: number; water: number; biodiversity: number; waste: number }[];
   scores: ScoreRow[];
