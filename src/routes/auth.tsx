@@ -46,7 +46,7 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -55,8 +55,13 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Account created. You can sign in now.");
-        setMode("signin");
+        if (data.session) {
+          toast.success("Account created. Welcome to EcoDNA AI");
+          navigate({ to: "/dashboard" });
+        } else {
+          toast.success("Check your email to confirm your account.");
+          setMode("signin");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
