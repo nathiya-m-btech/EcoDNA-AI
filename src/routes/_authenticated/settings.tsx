@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
       { property: "og:description", content: "Manage your EcoDNA workspace." },
     ],
   }),
-  component: SettingsPage;
+  component: SettingsPage,
 });
 
 function SettingsPage() {
