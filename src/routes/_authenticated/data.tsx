@@ -79,23 +79,29 @@ function DataPage() {
   };
 
   const commit = async () => {
-    if (!locationId) return toast.error("Select a location first");
+    if (!locationId) {
+      toast.error("Select a location first");
+      return;
+    }
     setSaving(true);
     const payload = rows.map((r) => ({
       location_id: locationId,
-      date: r.date,
-      air_quality: Number(r.air_quality),
-      water_quality: Number(r.water_quality),
-      biodiversity: Number(r.biodiversity),
-      waste_level: Number(r.waste_level),
-      temperature: r.temperature ? Number(r.temperature) : null,
-      humidity: r.humidity ? Number(r.humidity) : null,
-      rainfall: r.rainfall ? Number(r.rainfall) : null,
-      green_cover: r.green_cover ? Number(r.green_cover) : null,
+      date: r["date"],
+      air_quality: Number(r["air_quality"]),
+      water_quality: Number(r["water_quality"]),
+      biodiversity: Number(r["biodiversity"]),
+      waste_level: Number(r["waste_level"]),
+      temperature: r["temperature"] ? Number(r["temperature"]) : null,
+      humidity: r["humidity"] ? Number(r["humidity"]) : null,
+      rainfall: r["rainfall"] ? Number(r["rainfall"]) : null,
+      green_cover: r["green_cover"] ? Number(r["green_cover"]) : null,
     }));
     const { error } = await supabase.from("environmental_data" as never).insert(payload as never);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(`Imported ${payload.length} readings`);
     setRows([]);
     setErrors([]);

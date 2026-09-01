@@ -45,9 +45,9 @@ function PredictionsPage() {
       subtitle={location ? `Forecast trajectory for ${location.location_name}` : "Forecast trajectory"}
     >
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Current DNA score" value={<CountUp to={insight.score} />} icon={<Gauge className="h-4 w-4" />} />
-        <StatCard label="30-day forecast" value={<CountUp to={p30} />} tone="teal" icon={<TrendingUp className="h-4 w-4" />} />
-        <StatCard label="90-day forecast" value={<CountUp to={p90} />} tone="lime" icon={<Target className="h-4 w-4" />} />
+        <StatCard label="Current DNA score" value={<CountUp value={insight.score} />} icon={<Gauge className="h-4 w-4" />} />
+        <StatCard label="30-day forecast" value={<CountUp value={p30} />} tone="teal" icon={<TrendingUp className="h-4 w-4" />} />
+        <StatCard label="90-day forecast" value={<CountUp value={p90} />} tone="lime" icon={<Target className="h-4 w-4" />} />
         <StatCard
           label="Model confidence"
           value={`${Math.round(confidence)}%`}

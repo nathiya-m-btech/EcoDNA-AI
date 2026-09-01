@@ -51,7 +51,7 @@ function InsightsPage() {
 
   const narrative = f
     ? `${location?.location_name ?? "This location"} scores ${insight.score}/100 (${status.label.toLowerCase()}). ` +
-      `${strongest?.label} is the strongest signal at ${Math.round(strongest.value)}, while ${weakest?.label.toLowerCase()} ` +
+      `${strongest?.label ?? "—"} is the strongest signal at ${Math.round(strongest?.value ?? 0)}, while ${weakest?.label.toLowerCase() ?? "—"} ` +
       `is the limiting factor at ${Math.round(weakest?.value ?? 0)}. Prioritising that factor yields the highest marginal ` +
       `improvement to the composite DNA score.`
     : "No readings are available for this location yet. Upload a dataset in Data Management to generate insights.";
@@ -61,8 +61,8 @@ function InsightsPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="DNA score" value={insight.score} icon={<Activity className="h-4 w-4" />} />
         <StatCard label="Status" value={status.label} tone={insight.score >= 70 ? "emerald" : "amber"} />
-        <StatCard label="Strongest factor" value={strongest?.label ?? "—"} tone="lime" hint={strongest ? `${Math.round(strongest.value)}/100` : undefined} />
-        <StatCard label="Limiting factor" value={weakest?.label ?? "—"} tone="red" hint={weakest ? `${Math.round(weakest.value)}/100` : undefined} />
+        <StatCard label="Strongest factor" value={strongest?.label ?? "—"} tone="lime" hint={strongest ? `${Math.round(strongest.value)}/100` : ""} />
+        <StatCard label="Limiting factor" value={weakest?.label ?? "—"} tone="red" hint={weakest ? `${Math.round(weakest.value)}/100` : ""} />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
