@@ -29,8 +29,8 @@ export function DnaHelix({
         {[0, 1].map((strand) => {
           const pts = Array.from({ length: 60 }, (_, i) => {
             const t = i / 59;
-            const y = t * height;
-            const x = width / 2 + Math.sin(t * Math.PI * 3 + strand * Math.PI) * (width / 2 - 24);
+            const y = +(t * height).toFixed(3);
+            const x = +(width / 2 + Math.sin(t * Math.PI * 3 + strand * Math.PI) * (width / 2 - 24)).toFixed(3);
             return `${x},${y}`;
           }).join(" ");
           return (
@@ -47,9 +47,9 @@ export function DnaHelix({
         })}
         {Array.from({ length: rungs }, (_, i) => {
           const t = i / (rungs - 1);
-          const y = t * height;
-          const x1 = width / 2 + Math.sin(t * Math.PI * 3) * (width / 2 - 24);
-          const x2 = width / 2 + Math.sin(t * Math.PI * 3 + Math.PI) * (width / 2 - 24);
+          const y = +(t * height).toFixed(3);
+          const x1 = +(width / 2 + Math.sin(t * Math.PI * 3) * (width / 2 - 24)).toFixed(3);
+          const x2 = +(width / 2 + Math.sin(t * Math.PI * 3 + Math.PI) * (width / 2 - 24)).toFixed(3);
           const v = values[i % Math.max(values.length, 1)]?.value ?? 60;
           const color =
             v >= 80 ? "var(--eco-lime)" : v >= 65 ? "var(--eco-emerald)" : v >= 50 ? "var(--risk-medium)" : "var(--risk-high)";
