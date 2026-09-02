@@ -9,6 +9,7 @@ import { useLocationInsight, factorsFromRow } from "@/lib/eco/derive";
 import { useAlerts, useEnvData, useHotspots, useLocations } from "@/lib/eco/queries";
 import { computeDnaScore, forecast, riskColor, scoreStatus } from "@/lib/eco/scoring";
 import { Badge } from "@/components/ui/badge";
+import { LiveDataControls } from "@/components/eco/live-data-controls";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -63,6 +64,13 @@ function DashboardPage() {
       title={location?.location_name ?? "Dashboard"}
       subtitle={location?.region ? `${location.region} · Environmental DNA overview` : "Environmental DNA overview"}
     >
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-muted-foreground">
+          Live sources: Open-Meteo air quality, weather and satellite-derived vegetation signals.
+        </p>
+        <LiveDataControls />
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Air quality" value={latest?.air_quality ?? "—"} hint="index /100" icon={<Wind className="h-4 w-4" />} tone="teal" />
         <StatCard label="Water quality" value={latest?.water_quality ?? "—"} hint="index /100" icon={<Droplets className="h-4 w-4" />} tone="teal" />
