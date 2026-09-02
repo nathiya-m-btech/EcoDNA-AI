@@ -156,7 +156,7 @@ async function ingest(supabase: Sb, location: { id: string; location_name: strin
     });
   }
 
-  return { locationId: location.id, name: location.location_name, date: reading.date, score, ...reading };
+  return { ...reading, locationId: location.id, name: location.location_name, score };
 }
 
 /** Refresh live readings for one location, or every location when no id is given. */
