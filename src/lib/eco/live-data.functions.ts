@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { analyzeLocation } from "@/lib/eco/analysis";
 
 const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, n));
 const round = (n: number, d = 1) => Number(n.toFixed(d));
@@ -171,10 +172,12 @@ export const syncLiveData = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     const results = [];
+    const analyses = [];
     for (const loc of (locations ?? []) as any[]) {
       results.push(await ingest(supabase as unknown as Sb, loc));
+      analyses.push(await analyzeLocation(supabase as unknown as Sb, loc));
     }
-    return { synced: results.length, results };
+    return { synced: results.length, results, analyses };
   });
 
 /** Create a monitored location from coordinates and immediately ingest live data for it. */
@@ -205,5 +208,24 @@ export const createLocationFromCoords = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     const result = await ingest(supabase as unknown as Sb, inserted as any);
-    return { location: inserted, reading: result };
+    const analysis = await analyzeLocation(supabase as unknown as Sb, inserted as any);
+    return { location: inserted, reading: result, analysis };
+  });
+
+/** Re-run the environmental AI (hotspots, forecasts, recovery plan) over stored live data. */
+export const runEnvironmentalAI = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ locationId: z.string().uuid().optional() }).parse(input ?? {}))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    let q = supabase.from("locations").select("id, location_name, latitude, longitude");
+    if (data.locationId) q = q.eq("id", data.locationId);
+    const { data: locations, error } = await q;
+    if (error) throw new Error(error.message);
+
+    const analyses = [];
+    for (const loc of (locations ?? []) as any[]) {
+      analyses.push(await analyzeLocation(supabase as unknown as Sb, loc));
+    }
+    return { analysed: analyses.length, analyses };
   });
