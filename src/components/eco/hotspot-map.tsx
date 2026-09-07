@@ -19,9 +19,10 @@ export default function HotspotMap({
   useEffect(() => {
     if (!ref.current || mapRef.current) return;
     const map = L.map(ref.current, { scrollWheelZoom: false }).setView(center ?? [11.0168, 76.9558], 8);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      attribution: "&copy; OpenStreetMap &copy; CARTO",
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
       maxZoom: 19,
+      className: "eco-tiles",
     }).addTo(map);
     mapRef.current = map;
     return () => {
