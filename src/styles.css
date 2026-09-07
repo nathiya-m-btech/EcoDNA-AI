@@ -307,3 +307,8 @@
   background: oklch(0.2 0.03 166 / 70%) !important;
   color: oklch(0.7 0.03 158) !important;
 }
+
+/* Free OpenStreetMap raster tiles, tinted to match the dark environmental theme. */
+.eco-tiles {
+  filter: invert(1) hue-rotate(175deg) brightness(0.82) contrast(0.92) saturate(0.75);
+}
