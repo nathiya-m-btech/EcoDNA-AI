@@ -70,7 +70,11 @@ export function projectScore(history: { date: string; score: number }[], horizon
   const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
   // Damping: trend confidence decays with horizon, reversion pulls toward the mean.
   const trendWeight = 1 - Math.exp(-horizonDays / 45);
-  const drift = perDay * horizonDays * (1 - trendWeight * 0.55);
+  // Cap plausible movement: real environmental systems shift slowly, and a short
+  // observed series must not extrapolate into an implausible collapse or recovery.
+  const maxMove = 4 + (horizonDays / 30) * 6;
+  const rawDrift = perDay * horizonDays * (1 - trendWeight * 0.55);
+  const drift = Math.max(-maxMove, Math.min(maxMove, rawDrift));
   const reversion = (mean - last) * 0.18 * trendWeight;
   return Math.round(clamp(last + drift + reversion));
 }
