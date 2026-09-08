@@ -1,4 +1,4 @@
-import { computeDnaScore } from "./scoring";
+import { computeDnaScore, sourcePressure } from "./scoring";
 import {
   buildRecoveryPlan,
   detectHotspots,
