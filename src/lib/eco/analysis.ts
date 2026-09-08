@@ -34,10 +34,24 @@ export async function analyzeLocation(supabase: Sb, location: AnalysedLocation) 
   const readings = (rows ?? []) as Reading[];
   if (readings.length === 0) return { locationId: location.id, skipped: true as const };
 
+  const { data: srcRows } = await supabase
+    .from("pollution_sources")
+    .select("name, source_type, latitude, longitude, intensity")
+    .eq("status", "active");
+  const sources = (srcRows ?? []) as {
+    name: string;
+    source_type: string;
+    latitude: number;
+    longitude: number;
+    intensity: number | null;
+  }[];
+  const pressure = sourcePressure(location, sources);
+
   const latest = readings[readings.length - 1]!;
   const factors = readingFactors(latest);
-  const current = computeDnaScore(factors);
-  const history = readings.map((r) => ({ date: r.date, score: computeDnaScore(readingFactors(r)) }));
+  const current = computeDnaScore(factors, pressure);
+  const history = readings.map((r) => ({ date: r.date, score: computeDnaScore(readingFactors(r), pressure) }));
+
 
   const p30 = projectScore(history, 30);
   const p90 = projectScore(history, 90);
