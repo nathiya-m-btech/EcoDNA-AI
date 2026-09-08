@@ -332,6 +332,53 @@ export type Database = {
           },
         ]
       }
+      pollution_sources: {
+        Row: {
+          created_at: string
+          id: string
+          intensity: number
+          latitude: number
+          location_id: string | null
+          longitude: number
+          name: string
+          notes: string | null
+          source_type: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intensity?: number
+          latitude: number
+          location_id?: string | null
+          longitude: number
+          name: string
+          notes?: string | null
+          source_type: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intensity?: number
+          latitude?: number
+          location_id?: string | null
+          longitude?: number
+          name?: string
+          notes?: string | null
+          source_type?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pollution_sources_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
