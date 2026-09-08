@@ -83,8 +83,32 @@ export type AlertRow = {
   detected_at: string;
   status: string;
 };
+export type SourceRow = {
+  id: string;
+  location_id: string | null;
+  name: string;
+  source_type: string;
+  latitude: number;
+  longitude: number;
+  intensity: number | null;
+  notes: string | null;
+  status: string;
+  created_at: string;
+};
 
 const table = (name: string) => supabase.from(name as never);
+
+export function useSources() {
+  return useQuery({
+    queryKey: ["sources"],
+    queryFn: async () => {
+      const { data, error } = await table("pollution_sources").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as SourceRow[];
+    },
+  });
+}
+
 
 export function useLocations() {
   return useQuery({

@@ -7,6 +7,7 @@ export type Factors = {
   greenCover: number;
 };
 
+/** Baseline importance of each factor before the live data reshapes it. */
 export const FACTOR_WEIGHTS = {
   air: 0.22,
   water: 0.2,
@@ -18,18 +19,98 @@ export const FACTOR_WEIGHTS = {
 
 export const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, n));
 
-/** Environmental DNA Score (0-100) derived from weighted environmental factors. */
-export function computeDnaScore(f: Factors): number {
-  const wasteScore = clamp(100 - f.waste);
-  const raw =
-    f.air * FACTOR_WEIGHTS.air +
-    f.water * FACTOR_WEIGHTS.water +
-    f.biodiversity * FACTOR_WEIGHTS.biodiversity +
-    wasteScore * FACTOR_WEIGHTS.waste +
-    f.weather * FACTOR_WEIGHTS.weather +
-    f.greenCover * FACTOR_WEIGHTS.greenCover;
-  return Math.round(clamp(raw));
+export type SubIndices = {
+  air: number;
+  water: number;
+  biodiversity: number;
+  waste: number;
+  weather: number;
+  greenCover: number;
+};
+
+/** Convert raw factor measurements into 0-100 sub-indices (higher = healthier). */
+export function subIndices(f: Factors): SubIndices {
+  return {
+    air: clamp(f.air),
+    water: clamp(f.water),
+    biodiversity: clamp(f.biodiversity),
+    waste: clamp(100 - f.waste),
+    weather: clamp(f.weather),
+    greenCover: clamp(f.greenCover),
+  };
 }
+
+/**
+ * Data-driven weighting: the baseline weight of each factor is amplified by how
+ * far that factor sits below a healthy target, then renormalised. A city whose
+ * air is collapsing is scored mostly on its air, not on a fixed textbook ratio.
+ */
+export function dynamicWeights(sub: SubIndices): SubIndices {
+  const raw = {} as SubIndices;
+  let total = 0;
+  (Object.keys(FACTOR_WEIGHTS) as (keyof SubIndices)[]).forEach((k) => {
+    const stress = (100 - sub[k]) / 100; // 0 healthy → 1 critical
+    const w = FACTOR_WEIGHTS[k] * (1 + stress * 1.2);
+    raw[k] = w;
+    total += w;
+  });
+  (Object.keys(raw) as (keyof SubIndices)[]).forEach((k) => {
+    raw[k] = raw[k] / total;
+  });
+  return raw;
+}
+
+/**
+ * Environmental DNA Score (0-100).
+ * Composite index = 75% stress-weighted mean of the sub-indices + 25% limiting
+ * factor (the worst sub-index), minus pressure from mapped local pollution
+ * sources. The limiting-factor term stops one collapsed medium from being
+ * averaged away by healthy ones.
+ */
+export function computeDnaScore(f: Factors, sourcePressure = 0): number {
+  const sub = subIndices(f);
+  const w = dynamicWeights(sub);
+  const keys = Object.keys(sub) as (keyof SubIndices)[];
+  const weighted = keys.reduce((a, k) => a + sub[k] * w[k], 0);
+  const limiting = Math.min(...keys.map((k) => sub[k]));
+  const composite = weighted * 0.75 + limiting * 0.25;
+  return Math.round(clamp(composite - clamp(sourcePressure, 0, 20)));
+}
+
+/**
+ * Pressure (0-20 score points) from mapped local pollution sources, weighted by
+ * declared intensity, source type and distance from the monitored location.
+ */
+export const SOURCE_IMPACT: Record<string, number> = {
+  factory: 1,
+  industry: 1,
+  traffic: 0.8,
+  waste: 0.9,
+  landfill: 0.95,
+  construction: 0.6,
+  quarry: 0.7,
+  sewage: 0.85,
+  agriculture: 0.5,
+  other: 0.5,
+};
+
+export function sourcePressure(
+  location: { latitude: number; longitude: number },
+  sources: { latitude: number; longitude: number; intensity: number | null; source_type: string }[],
+): number {
+  let total = 0;
+  for (const s of sources) {
+    const dLat = (s.latitude - location.latitude) * 111;
+    const dLon = (s.longitude - location.longitude) * 111 * Math.cos((location.latitude * Math.PI) / 180);
+    const km = Math.sqrt(dLat * dLat + dLon * dLon);
+    if (km > 25) continue;
+    const decay = 1 / (1 + (km / 6) ** 2);
+    const impact = SOURCE_IMPACT[s.source_type.toLowerCase()] ?? 0.5;
+    total += ((s.intensity ?? 50) / 100) * impact * decay * 6;
+  }
+  return clamp(total, 0, 20);
+}
+
 
 /** Weather stability index derived from temperature, humidity and rainfall. */
 export function weatherStability(temperature = 30, humidity = 60, rainfall = 12): number {
