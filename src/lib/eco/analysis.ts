@@ -70,13 +70,29 @@ export async function analyzeLocation(supabase: Sb, location: AnalysedLocation) 
   });
   if (pe) throw new Error(pe.message);
 
-  // Hotspots derived from the latest live reading.
+  // Hotspots derived from the latest live reading plus mapped local sources.
   await supabase.from("pollution_hotspots").delete().eq("location_id", location.id);
   const hotspots = detectHotspots(location, latest).map((h) => ({ ...h, location_id: location.id }));
+  const nearby = sources.filter((s) => sourcePressure(location, [s]) > 0.4);
+  for (const s of nearby) {
+    const inten = s.intensity ?? 50;
+    hotspots.push({
+      location_id: location.id,
+      name: `${s.name} (${s.source_type})`,
+      latitude: s.latitude,
+      longitude: s.longitude,
+      pollution_level: inten >= 75 ? "Severe" : inten >= 50 ? "High" : "Moderate",
+      risk_level: inten >= 75 ? "High" : inten >= 50 ? "Medium" : "Recovering",
+      detected_factor: `Local source: ${s.source_type}`,
+      environmental_score: Math.round(Math.max(0, current - inten * 0.25)),
+      recommended_action: `Inspect and regulate emissions/discharge from ${s.name}; enforce buffer and monitoring at the site boundary.`,
+    } as (typeof hotspots)[number]);
+  }
   if (hotspots.length > 0) {
     const { error: he } = await supabase.from("pollution_hotspots").insert(hotspots);
     if (he) throw new Error(he.message);
   }
+
 
   // Recovery plan derived from real factor deficits.
   await supabase.from("recovery_actions").delete().eq("location_id", location.id);
