@@ -83,17 +83,17 @@ async function fetchLive(latitude: number, longitude: number): Promise<LiveReadi
 const weatherStability = (t: number, h: number, r: number) =>
   clamp((100 - Math.abs(t - 27) * 4) * 0.4 + (100 - Math.abs(h - 62) * 1.4) * 0.3 + (55 + Math.min(r, 30) * 1.5) * 0.3);
 
+/** Single source of truth: the shared environmental model scores every reading. */
 const dnaScore = (r: LiveReading) =>
-  Math.round(
-    clamp(
-      r.air_quality * 0.22 +
-        r.water_quality * 0.2 +
-        r.biodiversity * 0.18 +
-        clamp(100 - r.waste_level) * 0.15 +
-        weatherStability(r.temperature, r.humidity, r.rainfall) * 0.1 +
-        r.green_cover * 0.15,
-    ),
-  );
+  computeDnaScore({
+    air: r.air_quality,
+    water: r.water_quality,
+    biodiversity: r.biodiversity,
+    waste: r.waste_level,
+    weather: weatherStability(r.temperature, r.humidity, r.rainfall),
+    greenCover: r.green_cover,
+  });
+
 
 type Sb = { from: (t: string) => any };
 
