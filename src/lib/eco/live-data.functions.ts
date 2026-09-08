@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { analyzeLocation } from "@/lib/eco/analysis";
+import { computeDnaScore } from "@/lib/eco/scoring";
+
 
 const clamp = (n: number, min = 0, max = 100) => Math.max(min, Math.min(max, n));
 const round = (n: number, d = 1) => Number(n.toFixed(d));
