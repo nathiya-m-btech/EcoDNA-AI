@@ -77,11 +77,22 @@ function SourcesPage() {
     const lat = Number(form.latitude);
     const lon = Number(form.longitude);
     const intensity = Number(form.intensity);
-    if (form.name.trim().length < 2) return toast.error("Give the source a name.");
-    if (!Number.isFinite(lat) || lat < -90 || lat > 90) return toast.error("Latitude must be between -90 and 90.");
-    if (!Number.isFinite(lon) || lon < -180 || lon > 180) return toast.error("Longitude must be between -180 and 180.");
-    if (!Number.isFinite(intensity) || intensity < 0 || intensity > 100)
-      return toast.error("Intensity must be between 0 and 100.");
+    if (form.name.trim().length < 2) {
+      toast.error("Give the source a name.");
+      return;
+    }
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
+      toast.error("Latitude must be between -90 and 90.");
+      return;
+    }
+    if (!Number.isFinite(lon) || lon < -180 || lon > 180) {
+      toast.error("Longitude must be between -180 and 180.");
+      return;
+    }
+    if (!Number.isFinite(intensity) || intensity < 0 || intensity > 100) {
+      toast.error("Intensity must be between 0 and 100.");
+      return;
+    }
 
     setBusy(true);
     try {
@@ -108,7 +119,10 @@ function SourcesPage() {
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("pollution_sources" as never).delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     if (locationId) await runAI({ data: { locationId } });
     await qc.invalidateQueries();
     toast.success("Source removed.");
