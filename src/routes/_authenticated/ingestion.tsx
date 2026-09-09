@@ -126,9 +126,17 @@ function IngestionPage() {
   return (
     <AppShell title="Live Data Ingestion" subtitle="Coverage, freshness and AI processing per monitored location">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-muted-foreground">
-          Sources: Open-Meteo air quality, weather and satellite-derived vegetation/soil signals.
-        </p>
+        <div>
+          <p className="text-xs text-muted-foreground">
+            Sources: Open-Meteo air quality, weather and satellite-derived vegetation/soil signals.
+          </p>
+          {(busy === "auto" || autoNote) && (
+            <p className="mt-1 flex items-center gap-2 text-xs text-primary">
+              {busy === "auto" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {autoNote}
+            </p>
+          )}
+        </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => run("ai")} disabled={busy !== null}>
             {busy === "ai" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
@@ -140,6 +148,7 @@ function IngestionPage() {
           </Button>
         </div>
       </div>
+
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Monitored locations" value={rows.length} icon={<Database className="h-4 w-4" />} tone="teal" />
