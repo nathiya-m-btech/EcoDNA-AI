@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/eco/app-shell";
 import { Panel, StatCard } from "@/components/eco/panel";
-import { useHotspots } from "@/lib/eco/queries";
+import { useHotspots, useSources } from "@/lib/eco/queries";
 import { riskColor } from "@/lib/eco/scoring";
 import { Badge } from "@/components/ui/badge";
 
@@ -22,6 +22,8 @@ export const Route = createFileRoute("/_authenticated/hotspots")({
 
 function HotspotsPage() {
   const { data: hotspots, isLoading } = useHotspots();
+  const { data: sources } = useSources();
+
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -41,7 +43,7 @@ function HotspotsPage() {
         <Panel className="lg:col-span-2" title="Risk map" subtitle="Marker size scales with severity">
           {mounted ? (
             <Suspense fallback={<div className="h-[520px] animate-pulse rounded-2xl bg-secondary/50" />}>
-              <HotspotMap hotspots={rows} />
+              <HotspotMap hotspots={rows} sources={sources ?? []} />
             </Suspense>
           ) : (
             <div className="h-[520px] animate-pulse rounded-2xl bg-secondary/50" />
