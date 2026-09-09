@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -9,10 +9,11 @@ import { Panel, StatCard } from "@/components/eco/panel";
 import { ComparisonBars } from "@/components/eco/charts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useEnvData, useHotspots, useLocations } from "@/lib/eco/queries";
+import { useAllPredictions, useEnvData, useHotspots, useLocations } from "@/lib/eco/queries";
 import { computeDnaScore } from "@/lib/eco/scoring";
 import { factorsFromRow } from "@/lib/eco/derive";
 import { runEnvironmentalAI, syncLiveData } from "@/lib/eco/live-data.functions";
+
 
 export const Route = createFileRoute("/_authenticated/ingestion")({
   head: () => ({
