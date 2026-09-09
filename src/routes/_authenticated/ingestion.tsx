@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -9,10 +9,11 @@ import { Panel, StatCard } from "@/components/eco/panel";
 import { ComparisonBars } from "@/components/eco/charts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useEnvData, useHotspots, useLocations } from "@/lib/eco/queries";
+import { useAllPredictions, useEnvData, useHotspots, useLocations } from "@/lib/eco/queries";
 import { computeDnaScore } from "@/lib/eco/scoring";
 import { factorsFromRow } from "@/lib/eco/derive";
 import { runEnvironmentalAI, syncLiveData } from "@/lib/eco/live-data.functions";
+
 
 export const Route = createFileRoute("/_authenticated/ingestion")({
   head: () => ({
@@ -38,10 +39,13 @@ function IngestionPage() {
   const { data: locations } = useLocations();
   const { data: env } = useEnvData();
   const { data: hotspots } = useHotspots();
+  const { data: predictions } = useAllPredictions();
   const qc = useQueryClient();
   const sync = useServerFn(syncLiveData);
   const runAI = useServerFn(runEnvironmentalAI);
-  const [busy, setBusy] = useState<null | "sync" | "ai">(null);
+  const [busy, setBusy] = useState<null | "sync" | "ai" | "auto">(null);
+  const [autoNote, setAutoNote] = useState<string | null>(null);
+  const autoDone = useRef(false);
 
   const rows = (locations ?? []).map((l) => {
     const readings = (env ?? []).filter((r) => r.location_id === l.id).sort((a, b) => a.date.localeCompare(b.date));
@@ -55,12 +59,59 @@ function IngestionPage() {
       staleDays: latest ? daysSince(latest.date) : null,
       score: latest ? computeDnaScore(factorsFromRow(latest)) : null,
       zones: (hotspots ?? []).filter((h) => h.name.startsWith(l.location_name)).length,
+      aiPending: !(predictions ?? []).some((p) => p.location_id === l.id),
     };
   });
 
   const totalReadings = rows.reduce((a, b) => a + b.count, 0);
   const lagging = rows.filter((r) => r.count === 0 || (r.staleDays ?? 99) > 1).sort((a, b) => a.count - b.count);
   const fresh = rows.length - lagging.length;
+  const needsAuto = rows.filter((r) => r.count === 0 || r.aiPending);
+
+  // Auto-sync: any location with no live readings or no AI run gets filled in
+  // automatically on first visit, so no location is ever left blank.
+  useEffect(() => {
+    if (autoDone.current) return;
+    if (!locations || !env || !predictions) return;
+    const pending = rows.filter((r) => r.count === 0 || r.aiPending);
+    if (pending.length === 0) {
+      autoDone.current = true;
+      return;
+    }
+    autoDone.current = true;
+    let cancelled = false;
+    (async () => {
+      setBusy("auto");
+      setAutoNote(`Auto-syncing ${pending.length} location${pending.length === 1 ? "" : "s"} with missing data…`);
+      let done = 0;
+      // Fill several locations at a time so a long list does not take minutes.
+      const queue = [...pending];
+      const worker = async () => {
+        while (queue.length > 0 && !cancelled) {
+          const p = queue.shift()!;
+          try {
+            await sync({ data: { locationId: p.id } });
+            done += 1;
+            setAutoNote(`Auto-syncing missing locations… ${done}/${pending.length}`);
+          } catch {
+            /* keep going; a single provider failure must not stall the rest */
+          }
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(4, pending.length) }, worker));
+      if (cancelled) return;
+
+      if (cancelled) return;
+      await qc.invalidateQueries();
+      setBusy(null);
+      setAutoNote(done > 0 ? `Auto-synced ${done} location${done === 1 ? "" : "s"}.` : "Auto-sync could not reach the data provider.");
+      if (done > 0) toast.success(`Auto-synced ${done} location${done === 1 ? "" : "s"} with missing data`);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [locations, env, predictions, rows, sync, qc]);
+
 
   const run = async (kind: "sync" | "ai") => {
     setBusy(kind);
@@ -83,9 +134,17 @@ function IngestionPage() {
   return (
     <AppShell title="Live Data Ingestion" subtitle="Coverage, freshness and AI processing per monitored location">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-muted-foreground">
-          Sources: Open-Meteo air quality, weather and satellite-derived vegetation/soil signals.
-        </p>
+        <div>
+          <p className="text-xs text-muted-foreground">
+            Sources: Open-Meteo air quality, weather and satellite-derived vegetation/soil signals.
+          </p>
+          {(busy === "auto" || autoNote) && (
+            <p className="mt-1 flex items-center gap-2 text-xs text-primary">
+              {busy === "auto" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {autoNote}
+            </p>
+          )}
+        </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => run("ai")} disabled={busy !== null}>
             {busy === "ai" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
@@ -98,11 +157,12 @@ function IngestionPage() {
         </div>
       </div>
 
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Monitored locations" value={rows.length} icon={<Database className="h-4 w-4" />} tone="teal" />
         <StatCard label="Total readings" value={totalReadings} icon={<Activity className="h-4 w-4" />} tone="emerald" />
         <StatCard label="Up to date" value={fresh} hint="synced within 24h" tone="lime" />
-        <StatCard label="Lagging" value={lagging.length} icon={<TimerReset className="h-4 w-4" />} tone="amber" />
+        <StatCard label="Needs sync" value={needsAuto.length} hint="auto-filled on load" icon={<TimerReset className="h-4 w-4" />} tone="amber" />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -149,10 +209,18 @@ function IngestionPage() {
                     <td className="py-2.5 font-display">{r.score ?? "—"}</td>
                     <td className="py-2.5">{r.zones}</td>
                     <td className="py-2.5">
-                      <Badge variant="outline" className="text-[10px]" style={{ color: stale ? "var(--risk-medium)" : "var(--eco-emerald)", borderColor: stale ? "var(--risk-medium)" : "var(--eco-emerald)" }}>
-                        {r.count === 0 ? "No data" : stale ? `${r.staleDays}d behind` : "Current"}
-                      </Badge>
+                      <div className="flex flex-wrap gap-1.5">
+                        <Badge variant="outline" className="text-[10px]" style={{ color: stale ? "var(--risk-medium)" : "var(--eco-emerald)", borderColor: stale ? "var(--risk-medium)" : "var(--eco-emerald)" }}>
+                          {r.count === 0 ? "No data" : stale ? `${r.staleDays}d behind` : "Current"}
+                        </Badge>
+                        {r.aiPending && (
+                          <Badge variant="outline" className="text-[10px]" style={{ color: "var(--risk-medium)", borderColor: "var(--risk-medium)" }}>
+                            AI pending
+                          </Badge>
+                        )}
+                      </div>
                     </td>
+
                   </tr>
                 );
               })}

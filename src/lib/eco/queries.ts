@@ -173,6 +173,18 @@ export function usePrediction(locationId?: string) {
   });
 }
 
+export function useAllPredictions() {
+  return useQuery({
+    queryKey: ["predictions", "all"],
+    queryFn: async () => {
+      const { data, error } = await table("ai_predictions").select("*");
+      if (error) throw error;
+      return (data ?? []) as unknown as PredictionRow[];
+    },
+  });
+}
+
+
 export function useRecoveryActions(locationId?: string) {
   return useQuery({
     queryKey: ["recovery", locationId ?? "all"],
