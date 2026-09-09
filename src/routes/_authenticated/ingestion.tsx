@@ -39,10 +39,13 @@ function IngestionPage() {
   const { data: locations } = useLocations();
   const { data: env } = useEnvData();
   const { data: hotspots } = useHotspots();
+  const { data: predictions } = useAllPredictions();
   const qc = useQueryClient();
   const sync = useServerFn(syncLiveData);
   const runAI = useServerFn(runEnvironmentalAI);
-  const [busy, setBusy] = useState<null | "sync" | "ai">(null);
+  const [busy, setBusy] = useState<null | "sync" | "ai" | "auto">(null);
+  const [autoNote, setAutoNote] = useState<string | null>(null);
+  const autoDone = useRef(false);
 
   const rows = (locations ?? []).map((l) => {
     const readings = (env ?? []).filter((r) => r.location_id === l.id).sort((a, b) => a.date.localeCompare(b.date));
@@ -56,12 +59,51 @@ function IngestionPage() {
       staleDays: latest ? daysSince(latest.date) : null,
       score: latest ? computeDnaScore(factorsFromRow(latest)) : null,
       zones: (hotspots ?? []).filter((h) => h.name.startsWith(l.location_name)).length,
+      aiPending: !(predictions ?? []).some((p) => p.location_id === l.id),
     };
   });
 
   const totalReadings = rows.reduce((a, b) => a + b.count, 0);
   const lagging = rows.filter((r) => r.count === 0 || (r.staleDays ?? 99) > 1).sort((a, b) => a.count - b.count);
   const fresh = rows.length - lagging.length;
+  const needsAuto = rows.filter((r) => r.count === 0 || r.aiPending);
+
+  // Auto-sync: any location with no live readings or no AI run gets filled in
+  // automatically on first visit, so no location is ever left blank.
+  useEffect(() => {
+    if (autoDone.current) return;
+    if (!locations || !env || !predictions) return;
+    const pending = rows.filter((r) => r.count === 0 || r.aiPending);
+    if (pending.length === 0) {
+      autoDone.current = true;
+      return;
+    }
+    autoDone.current = true;
+    let cancelled = false;
+    (async () => {
+      setBusy("auto");
+      setAutoNote(`Auto-syncing ${pending.length} location${pending.length === 1 ? "" : "s"} with missing data…`);
+      let done = 0;
+      for (const p of pending) {
+        if (cancelled) return;
+        try {
+          await sync({ data: { locationId: p.id } });
+          done += 1;
+        } catch {
+          /* keep going; a single provider failure must not stall the rest */
+        }
+      }
+      if (cancelled) return;
+      await qc.invalidateQueries();
+      setBusy(null);
+      setAutoNote(done > 0 ? `Auto-synced ${done} location${done === 1 ? "" : "s"}.` : "Auto-sync could not reach the data provider.");
+      if (done > 0) toast.success(`Auto-synced ${done} location${done === 1 ? "" : "s"} with missing data`);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [locations, env, predictions, rows, sync, qc]);
+
 
   const run = async (kind: "sync" | "ai") => {
     setBusy(kind);
