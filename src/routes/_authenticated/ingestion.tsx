@@ -201,10 +201,18 @@ function IngestionPage() {
                     <td className="py-2.5 font-display">{r.score ?? "—"}</td>
                     <td className="py-2.5">{r.zones}</td>
                     <td className="py-2.5">
-                      <Badge variant="outline" className="text-[10px]" style={{ color: stale ? "var(--risk-medium)" : "var(--eco-emerald)", borderColor: stale ? "var(--risk-medium)" : "var(--eco-emerald)" }}>
-                        {r.count === 0 ? "No data" : stale ? `${r.staleDays}d behind` : "Current"}
-                      </Badge>
+                      <div className="flex flex-wrap gap-1.5">
+                        <Badge variant="outline" className="text-[10px]" style={{ color: stale ? "var(--risk-medium)" : "var(--eco-emerald)", borderColor: stale ? "var(--risk-medium)" : "var(--eco-emerald)" }}>
+                          {r.count === 0 ? "No data" : stale ? `${r.staleDays}d behind` : "Current"}
+                        </Badge>
+                        {r.aiPending && (
+                          <Badge variant="outline" className="text-[10px]" style={{ color: "var(--risk-medium)", borderColor: "var(--risk-medium)" }}>
+                            AI pending
+                          </Badge>
+                        )}
+                      </div>
                     </td>
+
                   </tr>
                 );
               })}
