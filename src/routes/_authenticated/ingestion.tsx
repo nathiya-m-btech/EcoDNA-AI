@@ -84,15 +84,23 @@ function IngestionPage() {
       setBusy("auto");
       setAutoNote(`Auto-syncing ${pending.length} location${pending.length === 1 ? "" : "s"} with missing data…`);
       let done = 0;
-      for (const p of pending) {
-        if (cancelled) return;
-        try {
-          await sync({ data: { locationId: p.id } });
-          done += 1;
-        } catch {
-          /* keep going; a single provider failure must not stall the rest */
+      // Fill several locations at a time so a long list does not take minutes.
+      const queue = [...pending];
+      const worker = async () => {
+        while (queue.length > 0 && !cancelled) {
+          const p = queue.shift()!;
+          try {
+            await sync({ data: { locationId: p.id } });
+            done += 1;
+            setAutoNote(`Auto-syncing missing locations… ${done}/${pending.length}`);
+          } catch {
+            /* keep going; a single provider failure must not stall the rest */
+          }
         }
-      }
+      };
+      await Promise.all(Array.from({ length: Math.min(4, pending.length) }, worker));
+      if (cancelled) return;
+
       if (cancelled) return;
       await qc.invalidateQueries();
       setBusy(null);
