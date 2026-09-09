@@ -154,7 +154,7 @@ function IngestionPage() {
         <StatCard label="Monitored locations" value={rows.length} icon={<Database className="h-4 w-4" />} tone="teal" />
         <StatCard label="Total readings" value={totalReadings} icon={<Activity className="h-4 w-4" />} tone="emerald" />
         <StatCard label="Up to date" value={fresh} hint="synced within 24h" tone="lime" />
-        <StatCard label="Lagging" value={lagging.length} icon={<TimerReset className="h-4 w-4" />} tone="amber" />
+        <StatCard label="Needs sync" value={needsAuto.length} hint="auto-filled on load" icon={<TimerReset className="h-4 w-4" />} tone="amber" />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
