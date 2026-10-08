@@ -18,6 +18,7 @@ export type LocationInsight = {
   factors: Factors | undefined;
   score: number;
   series: { date: string; score: number; air: number; water: number; biodiversity: number; waste: number }[];
+  rows: EnvDataRow[];
   scores: ScoreRow[];
   loading: boolean;
 };
