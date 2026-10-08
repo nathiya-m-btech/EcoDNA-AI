@@ -44,6 +44,7 @@ export function useLocationInsight(locationId?: string): LocationInsight {
       factors,
       score: factors ? computeDnaScore(factors) : 0,
       series,
+      rows,
       scores: scores ?? [],
       loading: l1 || l2,
     };
