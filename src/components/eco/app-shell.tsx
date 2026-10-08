@@ -1,6 +1,19 @@
 import { useState, type ReactNode } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
+  Activity,
+  AlertTriangle,
+  Columns2,
+  Crosshair,
+  Database,
+  Dna,
+  Factory,
+  FileText,
+  History,
+  Lightbulb,
+  Loader2,
+  Settings,
+  TrendingUp,
   Gauge,
   LogOut,
   Map as MapIcon,
@@ -23,14 +36,25 @@ import {
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: Gauge },
+  { to: "/dna", label: "DNA Profile", icon: Dna },
+  { to: "/compare", label: "Location Comparison", icon: Columns2 },
   { to: "/hotspots", label: "Hotspot Map", icon: MapIcon },
+  { to: "/sources", label: "Pollution Sources", icon: Factory },
+  { to: "/predictions", label: "AI Predictions", icon: TrendingUp },
   { to: "/recovery", label: "Recovery Simulator", icon: Sparkles },
+  { to: "/history", label: "History", icon: History },
+  { to: "/alerts", label: "Alerts", icon: AlertTriangle },
+  { to: "/insights", label: "Insights", icon: Lightbulb },
+  { to: "/ingestion", label: "Live Data", icon: Activity },
+  { to: "/data", label: "Data Upload", icon: Database },
+  { to: "/reports", label: "Reports", icon: FileText },
+  { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
 export function AppShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { locations, locationId, setLocationId } = useLocationStore();
+  const { locations, locationId, setLocationId, currentId, geo, useCurrent } = useLocationStore();
   const { user } = useAuthUser();
   const navigate = useNavigate();
 
@@ -102,6 +126,17 @@ export function AppShell({ title, subtitle, children }: { title: string; subtitl
               <h1 className="font-display truncate text-lg font-semibold sm:text-xl">{title}</h1>
               {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
             </div>
+            <button
+              onClick={useCurrent}
+              title="Use my current location"
+              className={cn(
+                "flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs transition-colors hover:border-primary/50 hover:text-primary",
+                currentId && currentId === locationId && "border-primary/50 text-primary",
+              )}
+            >
+              {geo === "locating" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Crosshair className="h-3.5 w-3.5" />}
+              <span className="hidden sm:inline">{geo === "denied" ? "Location off" : "Current"}</span>
+            </button>
             <Select value={locationId ?? ""} onValueChange={setLocationId}>
               <SelectTrigger className="w-[190px] rounded-xl border-border bg-secondary/60">
                 <SelectValue placeholder="Select location" />
@@ -110,6 +145,7 @@ export function AppShell({ title, subtitle, children }: { title: string; subtitl
                 {locations.map((l) => (
                   <SelectItem key={l.id} value={l.id}>
                     {l.location_name}
+                    {l.id === currentId ? " · You are here" : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
