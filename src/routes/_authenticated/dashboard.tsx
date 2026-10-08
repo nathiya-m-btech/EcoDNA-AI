@@ -1,5 +1,6 @@
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AlertTriangle, Brain, Droplets, Leaf, Recycle, Wind } from "lucide-react";
+import { AlertTriangle, Brain, Droplets, Leaf, Pause, Play, Recycle, RotateCcw, Wind } from "lucide-react";
 import { AppShell } from "@/components/eco/app-shell";
 import { Panel, StatCard } from "@/components/eco/panel";
 import { ScoreRing } from "@/components/eco/score-ring";
@@ -9,6 +10,8 @@ import { useLocationInsight, factorsFromRow } from "@/lib/eco/derive";
 import { useAlerts, useEnvData, useHotspots, useLocations } from "@/lib/eco/queries";
 import { computeDnaScore, forecast, riskColor, scoreStatus } from "@/lib/eco/scoring";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { LiveDataControls } from "@/components/eco/live-data-controls";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -34,10 +37,40 @@ function DashboardPage() {
   const { data: allLocations } = useLocations();
   const { data: allEnv } = useEnvData();
 
-  const status = scoreStatus(insight.score);
-  const scoreSeries = insight.series.map((s) => s.score);
+  // Simulation mode: replay the recorded readings step by step.
+  const [simIndex, setSimIndex] = useState<number | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const simulating = simIndex !== null;
+  const stepCount = insight.rows.length;
+
+  useEffect(() => {
+    setSimIndex(null);
+    setPlaying(false);
+  }, [locationId]);
+
+  useEffect(() => {
+    if (!playing || simIndex === null) return;
+    const t = setInterval(() => {
+      setSimIndex((i) => {
+        if (i === null) return i;
+        if (i >= stepCount - 1) {
+          setPlaying(false);
+          return i;
+        }
+        return i + 1;
+      });
+    }, 900);
+    return () => clearInterval(t);
+  }, [playing, simIndex !== null, stepCount]);
+
+  const activeRow = simulating ? insight.rows[simIndex] : insight.latest;
+  const activeFactors = useMemo(() => (activeRow ? factorsFromRow(activeRow) : undefined), [activeRow]);
+  const activeScore = activeFactors ? computeDnaScore(activeFactors) : 0;
+  const visibleSeries = simulating ? insight.series.slice(0, simIndex + 1) : insight.series;
+
+  const status = scoreStatus(activeScore);
+  const scoreSeries = visibleSeries.map((s) => s.score);
   const next30 = forecast(scoreSeries, 30);
-  const latest = insight.latest;
 
   const comparison = (allLocations ?? []).map((l) => {
     const rows = (allEnv ?? []).filter((r) => r.location_id === l.id);
@@ -45,19 +78,28 @@ function DashboardPage() {
     return { name: l.location_name, score: last ? computeDnaScore(factorsFromRow(last)) : 0 };
   });
 
-  const radar = insight.factors
+  const radar = activeFactors
     ? [
-        { factor: "Air", value: insight.factors.air },
-        { factor: "Water", value: insight.factors.water },
-        { factor: "Biodiversity", value: insight.factors.biodiversity },
-        { factor: "Waste", value: Math.max(0, 100 - insight.factors.waste) },
-        { factor: "Weather", value: insight.factors.weather },
-        { factor: "Green", value: insight.factors.greenCover },
+        { factor: "Air", value: activeFactors.air },
+        { factor: "Water", value: activeFactors.water },
+        { factor: "Biodiversity", value: activeFactors.biodiversity },
+        { factor: "Waste", value: Math.max(0, 100 - activeFactors.waste) },
+        { factor: "Weather", value: activeFactors.weather },
+        { factor: "Green", value: activeFactors.greenCover },
       ]
     : [];
 
   const openAlerts = (alerts ?? []).filter((a) => a.status !== "resolved").slice(0, 5);
-  const criticalHotspots = (hotspots ?? []).filter((h) => h.risk_level.toLowerCase().includes("high"));
+
+  const startSim = () => {
+    if (stepCount === 0) return;
+    setSimIndex(0);
+    setPlaying(true);
+  };
+  const stopSim = () => {
+    setSimIndex(null);
+    setPlaying(false);
+  };
 
   return (
     <AppShell
@@ -68,34 +110,73 @@ function DashboardPage() {
         <p className="text-xs text-muted-foreground">
           Live sources: Open-Meteo air quality, weather and satellite-derived vegetation signals.
         </p>
-        <LiveDataControls />
+        <div className="flex items-center gap-2">
+          <LiveDataControls />
+          {simulating ? (
+            <Button variant="outline" size="sm" onClick={stopSim}>
+              <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> Back to live
+            </Button>
+          ) : (
+            <Button size="sm" onClick={startSim} disabled={stepCount === 0}>
+              <Play className="mr-1.5 h-3.5 w-3.5" /> Simulate
+            </Button>
+          )}
+        </div>
       </div>
 
+      {simulating && (
+        <Panel className="mb-4" title="Simulation replay" subtitle="Stepping through recorded readings">
+          <div className="flex flex-wrap items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setPlaying((p) => !p)}
+              aria-label={playing ? "Pause simulation" : "Play simulation"}
+            >
+              {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </Button>
+            <Slider
+              className="min-w-40 flex-1"
+              value={[simIndex]}
+              max={Math.max(0, stepCount - 1)}
+              step={1}
+              onValueChange={([v]) => {
+                setPlaying(false);
+                setSimIndex(v ?? 0);
+              }}
+            />
+            <Badge variant="outline" className="text-xs">
+              {activeRow?.date ?? "—"} · reading {simIndex + 1}/{stepCount}
+            </Badge>
+          </div>
+        </Panel>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Air quality" value={latest?.air_quality ?? "—"} hint="index /100" icon={<Wind className="h-4 w-4" />} tone="teal" />
-        <StatCard label="Water quality" value={latest?.water_quality ?? "—"} hint="index /100" icon={<Droplets className="h-4 w-4" />} tone="teal" />
-        <StatCard label="Biodiversity" value={latest?.biodiversity ?? "—"} hint="index /100" icon={<Leaf className="h-4 w-4" />} tone="lime" />
-        <StatCard label="Waste level" value={latest?.waste_level ?? "—"} hint="lower is better" icon={<Recycle className="h-4 w-4" />} tone="amber" />
+        <StatCard label="Air quality" value={activeRow?.air_quality ?? "—"} hint="index /100" icon={<Wind className="h-4 w-4" />} tone="teal" />
+        <StatCard label="Water quality" value={activeRow?.water_quality ?? "—"} hint="index /100" icon={<Droplets className="h-4 w-4" />} tone="teal" />
+        <StatCard label="Biodiversity" value={activeRow?.biodiversity ?? "—"} hint="index /100" icon={<Leaf className="h-4 w-4" />} tone="lime" />
+        <StatCard label="Waste level" value={activeRow?.waste_level ?? "—"} hint="lower is better" icon={<Recycle className="h-4 w-4" />} tone="amber" />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <Panel title="Environmental DNA Score" subtitle="Weighted composite of six factors">
           <div className="flex flex-col items-center gap-4">
-            <ScoreRing score={insight.score} size={210} />
+            <ScoreRing score={activeScore} size={210} />
             <Badge variant="outline" style={{ color: status.color, borderColor: status.color }}>
               {status.label}
             </Badge>
             <p className="text-center text-xs text-muted-foreground">
               30-day AI projection: <span className="font-semibold text-foreground">{next30}</span>{" "}
-              ({next30 - insight.score >= 0 ? "+" : ""}
-              {next30 - insight.score} pts)
+              ({next30 - activeScore >= 0 ? "+" : ""}
+              {next30 - activeScore} pts)
             </p>
           </div>
         </Panel>
 
         <Panel className="lg:col-span-2" title="Score trajectory" subtitle="Historical DNA score evolution">
-          {insight.series.length > 0 ? (
-            <ScoreAreaChart data={insight.series} />
+          {visibleSeries.length > 0 ? (
+            <ScoreAreaChart data={visibleSeries} />
           ) : (
             <p className="py-16 text-center text-sm text-muted-foreground">No data recorded for this location yet.</p>
           )}
@@ -140,7 +221,7 @@ function DashboardPage() {
 
         <Panel
           title="Critical hotspots"
-          subtitle={`${criticalHotspots.length} high-risk zones detected`}
+          subtitle="High-risk zones detected"
           action={
             <Link to="/hotspots" className="text-xs text-primary hover:underline">
               Open map
@@ -168,13 +249,13 @@ function DashboardPage() {
           <Brain className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <p className="text-sm text-muted-foreground">
             {location?.location_name ?? "This location"} currently holds an Environmental DNA score of{" "}
-            <span className="font-semibold text-foreground">{insight.score}</span> ({status.label.toLowerCase()}).
-            {insight.factors && (
+            <span className="font-semibold text-foreground">{activeScore}</span> ({status.label.toLowerCase()}).
+            {activeFactors && (
               <>
                 {" "}
                 The weakest contributor is{" "}
-                <span className="font-semibold text-foreground">{weakest(insight.factors)}</span>, while the strongest
-                is <span className="font-semibold text-foreground">{strongest(insight.factors)}</span>. Modelled
+                <span className="font-semibold text-foreground">{weakest(activeFactors)}</span>, while the strongest
+                is <span className="font-semibold text-foreground">{strongest(activeFactors)}</span>. Modelled
                 trajectory suggests the score will move toward <span className="font-semibold text-foreground">{next30}</span>{" "}
                 within 30 days if current conditions persist.
               </>

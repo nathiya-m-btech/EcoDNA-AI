@@ -18,6 +18,7 @@ export type LocationInsight = {
   factors: Factors | undefined;
   score: number;
   series: { date: string; score: number; air: number; water: number; biodiversity: number; waste: number }[];
+  rows: EnvDataRow[];
   scores: ScoreRow[];
   loading: boolean;
 };
@@ -43,6 +44,7 @@ export function useLocationInsight(locationId?: string): LocationInsight {
       factors,
       score: factors ? computeDnaScore(factors) : 0,
       series,
+      rows,
       scores: scores ?? [],
       loading: l1 || l2,
     };
