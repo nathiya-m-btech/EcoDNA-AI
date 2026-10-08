@@ -1,21 +1,10 @@
 import { useState, type ReactNode } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  Activity,
-  AlertTriangle,
-  BarChart3,
-  Brain,
-  Database,
-  Dna,
-  Factory,
-
   Gauge,
-  History,
   LogOut,
   Map as MapIcon,
   Menu,
-  Satellite,
-  Settings,
   Sparkles,
   X,
 } from "lucide-react";
