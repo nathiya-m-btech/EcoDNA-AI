@@ -34,19 +34,8 @@ import {
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: Gauge },
-  { to: "/dna", label: "Eco DNA Profile", icon: Dna },
   { to: "/hotspots", label: "Hotspot Map", icon: MapIcon },
-  { to: "/sources", label: "Pollution Sources", icon: Factory },
-
-  { to: "/predictions", label: "AI Predictions", icon: Brain },
   { to: "/recovery", label: "Recovery Simulator", icon: Sparkles },
-  { to: "/history", label: "Historical Trends", icon: History },
-  { to: "/alerts", label: "Alerts", icon: AlertTriangle },
-  { to: "/insights", label: "AI Insights", icon: Activity },
-  { to: "/ingestion", label: "Live Data", icon: Satellite },
-  { to: "/data", label: "Data Management", icon: Database },
-  { to: "/reports", label: "Reports", icon: BarChart3 },
-  { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
 export function AppShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
