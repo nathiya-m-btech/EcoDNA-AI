@@ -16,6 +16,8 @@ export const Route = createFileRoute("/_authenticated/insights")({
       { name: "description", content: "Automated environmental interpretation, weak factors and cross-location ranking." },
       { property: "og:title", content: "AI Insights — EcoDNA AI" },
       { property: "og:description", content: "Understand what the environmental data actually means." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: InsightsPage,

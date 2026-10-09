@@ -20,6 +20,8 @@ export const Route = createFileRoute("/_authenticated/history")({
       { name: "description", content: "Long-run environmental factor trends and raw observation history." },
       { property: "og:title", content: "Historical Trends — EcoDNA AI" },
       { property: "og:description", content: "Track how the ecosystem evolved over time." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: HistoryPage,

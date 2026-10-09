@@ -16,6 +16,8 @@ export const Route = createFileRoute("/_authenticated/alerts")({
       { name: "description", content: "Real-time degradation alerts with severity, factor and recommended response." },
       { property: "og:title", content: "Environmental Alerts — EcoDNA AI" },
       { property: "og:description", content: "Monitor environmental risk events as they surface." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: AlertsPage,

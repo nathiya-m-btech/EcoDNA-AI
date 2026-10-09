@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocationStore } from "@/lib/eco/location-store";
 import { useAuthUser } from "@/lib/eco/use-auth";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -76,9 +77,9 @@ export function AppShell({ title, subtitle, children }: { title: string; subtitl
           <Link to="/">
             <EcoLogo />
           </Link>
-          <button className="lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu">
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu">
             <X className="h-5 w-5" />
-          </button>
+          </Button>
         </div>
         <nav className="mt-2 flex h-[calc(100vh-8rem)] flex-col gap-1 overflow-y-auto px-3 pb-6">
           {NAV.map((item) => {
@@ -103,12 +104,12 @@ export function AppShell({ title, subtitle, children }: { title: string; subtitl
         </nav>
         <div className="absolute inset-x-3 bottom-3 rounded-xl border border-border bg-secondary/50 p-3">
           <p className="truncate text-xs text-muted-foreground">{user?.email ?? "Guest analyst"}</p>
-          <button
+          <Button variant="outline" size="sm"
             onClick={signOut}
             className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs hover:border-primary/50 hover:text-primary"
           >
             <LogOut className="h-3.5 w-3.5" /> Sign out
-          </button>
+          </Button>
         </div>
       </aside>
 
@@ -119,15 +120,16 @@ export function AppShell({ title, subtitle, children }: { title: string; subtitl
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
           <div className="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
-            <button className="lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu">
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu">
               <Menu className="h-5 w-5" />
-            </button>
-            <div className="min-w-0 flex-1">
-              <h1 className="font-display truncate text-lg font-semibold sm:text-xl">{title}</h1>
-              {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
+            </Button>
+            <div className="min-w-0 flex-1 basis-[calc(100%-52px)] sm:basis-auto">
+              <h1 className="font-display text-lg font-semibold sm:text-xl">{title}</h1>
+              {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
             </div>
-            <button
+            <Button variant="outline" size="sm"
               onClick={useCurrent}
+              disabled={geo === "locating"}
               title="Use my current location"
               className={cn(
                 "flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs transition-colors hover:border-primary/50 hover:text-primary",
@@ -135,8 +137,8 @@ export function AppShell({ title, subtitle, children }: { title: string; subtitl
               )}
             >
               {geo === "locating" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Crosshair className="h-3.5 w-3.5" />}
-              <span className="hidden sm:inline">{geo === "denied" ? "Location off" : "Current"}</span>
-            </button>
+              <span>{geo === "denied" ? "Retry location" : "Current location"}</span>
+            </Button>
             <Select value={locationId ?? ""} onValueChange={setLocationId}>
               <SelectTrigger className="w-[190px] rounded-xl border-border bg-secondary/60">
                 <SelectValue placeholder="Select location" />

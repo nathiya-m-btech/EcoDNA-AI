@@ -19,6 +19,8 @@ export const Route = createFileRoute("/_authenticated/settings")({
       { name: "description", content: "Account details, monitored locations and scoring model configuration." },
       { property: "og:title", content: "Settings — EcoDNA AI" },
       { property: "og:description", content: "Manage your EcoDNA workspace." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: SettingsPage,
