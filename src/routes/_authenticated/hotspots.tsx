@@ -15,6 +15,8 @@ export const Route = createFileRoute("/_authenticated/hotspots")({
       { name: "description", content: "Interactive risk map of detected pollution hotspots with causal factors and recommended actions." },
       { property: "og:title", content: "Pollution Hotspot Map — EcoDNA AI" },
       { property: "og:description", content: "Geospatial environmental risk detection." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: HotspotsPage,

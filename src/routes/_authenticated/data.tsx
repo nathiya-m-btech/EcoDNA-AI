@@ -31,6 +31,8 @@ export const Route = createFileRoute("/_authenticated/data")({
       { name: "description", content: "Upload processed datasets or raw sensor readings and feed them to the environmental DNA engine." },
       { property: "og:title", content: "Data Management — EcoDNA AI" },
       { property: "og:description", content: "Bring your own environmental datasets and sensor feeds." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: DataPage,

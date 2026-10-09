@@ -16,6 +16,8 @@ export const Route = createFileRoute("/_authenticated/dna")({
       { name: "description", content: "The unique environmental genetic signature of a location, factor by factor." },
       { property: "og:title", content: "Eco DNA Profile — EcoDNA AI" },
       { property: "og:description", content: "Environmental genetic signature by factor." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: DnaPage,

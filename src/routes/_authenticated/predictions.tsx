@@ -16,6 +16,8 @@ export const Route = createFileRoute("/_authenticated/predictions")({
       { name: "description", content: "30 and 90 day environmental DNA score forecasts with model confidence." },
       { property: "og:title", content: "AI Predictions — EcoDNA AI" },
       { property: "og:description", content: "Forecast environmental trajectory with AI." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PredictionsPage,

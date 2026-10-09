@@ -24,6 +24,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       },
       { property: "og:title", content: "Dashboard — EcoDNA AI" },
       { property: "og:description", content: "Live Environmental DNA intelligence console." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: DashboardPage,

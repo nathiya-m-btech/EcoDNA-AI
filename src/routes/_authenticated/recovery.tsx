@@ -20,6 +20,8 @@ export const Route = createFileRoute("/_authenticated/recovery")({
       { name: "description", content: "Simulate restoration levers and see the projected environmental DNA score." },
       { property: "og:title", content: "Recovery Simulator — EcoDNA AI" },
       { property: "og:description", content: "Model restoration scenarios before investing." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: RecoveryPage,

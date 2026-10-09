@@ -30,7 +30,7 @@ function tile(lat: number, lng: number) {
   return { x, y };
 }
 
-function Satellite({ loc }: { loc?: LocationRow }) {
+function Satellite({ loc }: { loc: LocationRow | undefined }) {
   if (!loc) return <div className="aspect-square rounded-lg bg-secondary/40" />;
   const { x, y } = tile(loc.latitude, loc.longitude);
   const cells = [-1, 0, 1].flatMap((dy) => [-1, 0, 1].map((dx) => ({ dx, dy })));

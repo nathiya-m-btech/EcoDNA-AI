@@ -16,6 +16,8 @@ export const Route = createFileRoute("/_authenticated/reports")({
       { name: "description", content: "Generate and export environmental DNA assessment reports for any location." },
       { property: "og:title", content: "Reports — EcoDNA AI" },
       { property: "og:description", content: "Export shareable environmental assessments." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: ReportsPage,
