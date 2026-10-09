@@ -123,9 +123,9 @@ export function AppShell({ title, subtitle, children }: { title: string; subtitl
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu">
               <Menu className="h-5 w-5" />
             </Button>
-            <div className="min-w-0 flex-1">
-              <h1 className="font-display truncate text-lg font-semibold sm:text-xl">{title}</h1>
-              {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
+            <div className="min-w-0 flex-1 basis-[calc(100%-52px)] sm:basis-auto">
+              <h1 className="font-display text-lg font-semibold sm:text-xl">{title}</h1>
+              {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
             </div>
             <Button variant="outline" size="sm"
               onClick={useCurrent}
