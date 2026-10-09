@@ -86,11 +86,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
             setLocationId(res.location.id);
             setGeo("ready");
           } catch {
-            if (best) {
-              setCurrentId(best.id);
-              setLocationId(best.id);
-            }
-            setGeo("ready");
+            setGeo("denied");
           }
         },
         () => setGeo("denied"),
@@ -101,8 +97,9 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    if (!data || data.length === 0) return;
-    if (!locationId) setLocationId(data[0]!.id);
+    if (!data) return;
+    const first = data[0];
+    if (!locationId && first) setLocationId(first.id);
     if (!started.current) {
       started.current = true;
       resolveCurrent(data);
