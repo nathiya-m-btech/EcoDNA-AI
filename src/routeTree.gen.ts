@@ -15,16 +15,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedCompareRouteImport } from './routes/_authenticated/compare'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedDataRouteImport } from './routes/_authenticated/data'
 import { Route as AuthenticatedDnaRouteImport } from './routes/_authenticated/dna'
-import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedHotspotsRouteImport } from './routes/_authenticated/hotspots'
-import { Route as AuthenticatedIngestionRouteImport } from './routes/_authenticated/ingestion'
-import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticated/insights'
 import { Route as AuthenticatedPredictionsRouteImport } from './routes/_authenticated/predictions'
 import { Route as AuthenticatedRecoveryRouteImport } from './routes/_authenticated/recovery'
-import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSourcesRouteImport } from './routes/_authenticated/sources'
 
 const IndexRoute = IndexRouteImport.update({
@@ -56,34 +50,14 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedDataRoute = AuthenticatedDataRouteImport.update({
-  id: '/data',
-  path: '/data',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedDnaRoute = AuthenticatedDnaRouteImport.update({
   id: '/dna',
   path: '/dna',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
-  id: '/history',
-  path: '/history',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedHotspotsRoute = AuthenticatedHotspotsRouteImport.update({
   id: '/hotspots',
   path: '/hotspots',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedIngestionRoute = AuthenticatedIngestionRouteImport.update({
-  id: '/ingestion',
-  path: '/ingestion',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedInsightsRoute = AuthenticatedInsightsRouteImport.update({
-  id: '/insights',
-  path: '/insights',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPredictionsRoute =
@@ -95,16 +69,6 @@ const AuthenticatedPredictionsRoute =
 const AuthenticatedRecoveryRoute = AuthenticatedRecoveryRouteImport.update({
   id: '/recovery',
   path: '/recovery',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSourcesRoute = AuthenticatedSourcesRouteImport.update({
@@ -119,16 +83,10 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/compare': typeof AuthenticatedCompareRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/data': typeof AuthenticatedDataRoute
   '/dna': typeof AuthenticatedDnaRoute
-  '/history': typeof AuthenticatedHistoryRoute
   '/hotspots': typeof AuthenticatedHotspotsRoute
-  '/ingestion': typeof AuthenticatedIngestionRoute
-  '/insights': typeof AuthenticatedInsightsRoute
   '/predictions': typeof AuthenticatedPredictionsRoute
   '/recovery': typeof AuthenticatedRecoveryRoute
-  '/reports': typeof AuthenticatedReportsRoute
-  '/settings': typeof AuthenticatedSettingsRoute
   '/sources': typeof AuthenticatedSourcesRoute
 }
 export interface FileRoutesByTo {
@@ -137,16 +95,10 @@ export interface FileRoutesByTo {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/compare': typeof AuthenticatedCompareRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/data': typeof AuthenticatedDataRoute
   '/dna': typeof AuthenticatedDnaRoute
-  '/history': typeof AuthenticatedHistoryRoute
   '/hotspots': typeof AuthenticatedHotspotsRoute
-  '/ingestion': typeof AuthenticatedIngestionRoute
-  '/insights': typeof AuthenticatedInsightsRoute
   '/predictions': typeof AuthenticatedPredictionsRoute
   '/recovery': typeof AuthenticatedRecoveryRoute
-  '/reports': typeof AuthenticatedReportsRoute
-  '/settings': typeof AuthenticatedSettingsRoute
   '/sources': typeof AuthenticatedSourcesRoute
 }
 export interface FileRoutesById {
@@ -157,16 +109,10 @@ export interface FileRoutesById {
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/compare': typeof AuthenticatedCompareRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/data': typeof AuthenticatedDataRoute
   '/_authenticated/dna': typeof AuthenticatedDnaRoute
-  '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/hotspots': typeof AuthenticatedHotspotsRoute
-  '/_authenticated/ingestion': typeof AuthenticatedIngestionRoute
-  '/_authenticated/insights': typeof AuthenticatedInsightsRoute
   '/_authenticated/predictions': typeof AuthenticatedPredictionsRoute
   '/_authenticated/recovery': typeof AuthenticatedRecoveryRoute
-  '/_authenticated/reports': typeof AuthenticatedReportsRoute
-  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/sources': typeof AuthenticatedSourcesRoute
 }
 export interface FileRouteTypes {
@@ -177,16 +123,10 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/compare'
     | '/dashboard'
-    | '/data'
     | '/dna'
-    | '/history'
     | '/hotspots'
-    | '/ingestion'
-    | '/insights'
     | '/predictions'
     | '/recovery'
-    | '/reports'
-    | '/settings'
     | '/sources'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -195,16 +135,10 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/compare'
     | '/dashboard'
-    | '/data'
     | '/dna'
-    | '/history'
     | '/hotspots'
-    | '/ingestion'
-    | '/insights'
     | '/predictions'
     | '/recovery'
-    | '/reports'
-    | '/settings'
     | '/sources'
   id:
     | '__root__'
@@ -214,16 +148,10 @@ export interface FileRouteTypes {
     | '/_authenticated/alerts'
     | '/_authenticated/compare'
     | '/_authenticated/dashboard'
-    | '/_authenticated/data'
     | '/_authenticated/dna'
-    | '/_authenticated/history'
     | '/_authenticated/hotspots'
-    | '/_authenticated/ingestion'
-    | '/_authenticated/insights'
     | '/_authenticated/predictions'
     | '/_authenticated/recovery'
-    | '/_authenticated/reports'
-    | '/_authenticated/settings'
     | '/_authenticated/sources'
   fileRoutesById: FileRoutesById
 }
@@ -277,13 +205,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/data': {
-      id: '/_authenticated/data'
-      path: '/data'
-      fullPath: '/data'
-      preLoaderRoute: typeof AuthenticatedDataRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/dna': {
       id: '/_authenticated/dna'
       path: '/dna'
@@ -291,32 +212,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDnaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/history': {
-      id: '/_authenticated/history'
-      path: '/history'
-      fullPath: '/history'
-      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/hotspots': {
       id: '/_authenticated/hotspots'
       path: '/hotspots'
       fullPath: '/hotspots'
       preLoaderRoute: typeof AuthenticatedHotspotsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ingestion': {
-      id: '/_authenticated/ingestion'
-      path: '/ingestion'
-      fullPath: '/ingestion'
-      preLoaderRoute: typeof AuthenticatedIngestionRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/insights': {
-      id: '/_authenticated/insights'
-      path: '/insights'
-      fullPath: '/insights'
-      preLoaderRoute: typeof AuthenticatedInsightsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/predictions': {
@@ -333,20 +233,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRecoveryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/reports': {
-      id: '/_authenticated/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AuthenticatedReportsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/sources': {
       id: '/_authenticated/sources'
       path: '/sources'
@@ -361,16 +247,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedCompareRoute: typeof AuthenticatedCompareRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedDataRoute: typeof AuthenticatedDataRoute
   AuthenticatedDnaRoute: typeof AuthenticatedDnaRoute
-  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedHotspotsRoute: typeof AuthenticatedHotspotsRoute
-  AuthenticatedIngestionRoute: typeof AuthenticatedIngestionRoute
-  AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
   AuthenticatedPredictionsRoute: typeof AuthenticatedPredictionsRoute
   AuthenticatedRecoveryRoute: typeof AuthenticatedRecoveryRoute
-  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
-  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSourcesRoute: typeof AuthenticatedSourcesRoute
 }
 
@@ -378,16 +258,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
   AuthenticatedCompareRoute: AuthenticatedCompareRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedDataRoute: AuthenticatedDataRoute,
   AuthenticatedDnaRoute: AuthenticatedDnaRoute,
-  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedHotspotsRoute: AuthenticatedHotspotsRoute,
-  AuthenticatedIngestionRoute: AuthenticatedIngestionRoute,
-  AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
   AuthenticatedPredictionsRoute: AuthenticatedPredictionsRoute,
   AuthenticatedRecoveryRoute: AuthenticatedRecoveryRoute,
-  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
-  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSourcesRoute: AuthenticatedSourcesRoute,
 }
 

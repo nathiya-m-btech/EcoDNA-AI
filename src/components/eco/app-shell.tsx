@@ -1,18 +1,12 @@
 import { useState, type ReactNode } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  Activity,
   AlertTriangle,
   Columns2,
   Crosshair,
-  Database,
   Dna,
   Factory,
-  FileText,
-  History,
-  Lightbulb,
   Loader2,
-  Settings,
   TrendingUp,
   Gauge,
   LogOut,
@@ -43,13 +37,7 @@ const NAV = [
   { to: "/sources", label: "Pollution Sources", icon: Factory },
   { to: "/predictions", label: "AI Predictions", icon: TrendingUp },
   { to: "/recovery", label: "Recovery Simulator", icon: Sparkles },
-  { to: "/history", label: "History", icon: History },
   { to: "/alerts", label: "Alerts", icon: AlertTriangle },
-  { to: "/insights", label: "Insights", icon: Lightbulb },
-  { to: "/ingestion", label: "Live Data", icon: Activity },
-  { to: "/data", label: "Data Upload", icon: Database },
-  { to: "/reports", label: "Reports", icon: FileText },
-  { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
 export function AppShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
