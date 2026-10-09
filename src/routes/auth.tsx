@@ -41,7 +41,7 @@ function AuthPage() {
     setGoogleBusy(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/auth`,
       });
       if (result.error) throw result.error;
       if (result.redirected) return;
@@ -58,6 +58,10 @@ function AuthPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/dashboard" });
     });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session) navigate({ to: "/dashboard" });
+    });
+    return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
   const submit = async (e: React.FormEvent) => {
