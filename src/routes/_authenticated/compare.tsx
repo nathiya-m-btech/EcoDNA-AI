@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/eco/app-shell";
-import { Panel } from "@/components/eco/panel";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLocationStore } from "@/lib/eco/location-store";
 import { useScores, type LocationRow, type ScoreRow } from "@/lib/eco/queries";
@@ -24,22 +25,22 @@ const Z = 14;
 function tile(lat: number, lng: number) {
   const n = 2 ** Z;
   const x = Math.floor(((lng + 180) / 360) * n);
-  const r = (lat * Math.PI) / 180;
+  const r = (Math.max(-85.0511, Math.min(85.0511, lat)) * Math.PI) / 180;
   const y = Math.floor(((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * n);
   return { x, y };
 }
 
 function Satellite({ loc }: { loc?: LocationRow }) {
-  if (!loc) return <div className="aspect-square rounded-2xl bg-secondary/40" />;
+  if (!loc) return <div className="aspect-square rounded-lg bg-secondary/40" />;
   const { x, y } = tile(loc.latitude, loc.longitude);
   const cells = [-1, 0, 1].flatMap((dy) => [-1, 0, 1].map((dx) => ({ dx, dy })));
   return (
-    <div className="grid aspect-square grid-cols-3 overflow-hidden rounded-2xl border border-border">
+    <div role="img" aria-label={`Satellite view of ${loc.location_name}`} className="grid aspect-square grid-cols-3 overflow-hidden rounded-lg border border-border">
       {cells.map(({ dx, dy }) => (
         <img
           key={`${dx}${dy}`}
           src={`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${Z}/${y + dy}/${x + dx}`}
-          alt={`Satellite view of ${loc.location_name}`}
+          alt=""
           className="h-full w-full object-cover"
           loading="lazy"
         />
@@ -62,6 +63,7 @@ function ComparePage() {
   const [a, setA] = useState<string | undefined>();
   const [b, setB] = useState<string | undefined>();
   const [split, setSplit] = useState(50);
+  const [imageMode, setImageMode] = useState<"side" | "swipe">("side");
   const idA = a ?? locationId;
   const idB = b ?? locations.find((l) => l.id !== idA)?.id;
   const locA = locations.find((l) => l.id === idA);
@@ -69,64 +71,96 @@ function ComparePage() {
   const { data: all } = useScores();
   const latest = useMemo(() => {
     const m = new Map<string, ScoreRow>();
-    for (const s of all ?? []) m.set(s.location_id, s);
+    for (const s of all ?? []) {
+      const previous = m.get(s.location_id);
+      if (!previous || s.date >= previous.date) m.set(s.location_id, s);
+    }
     return m;
   }, [all]);
   const sA = idA ? latest.get(idA) : undefined;
   const sB = idB ? latest.get(idB) : undefined;
 
-  const picker = (v: string | undefined, set: (v: string) => void) => (
+  const picker = (label: string, v: string | undefined, set: (v: string) => void) => (
+    <div className="min-w-0">
+    <p className="mb-2 text-sm text-muted-foreground">{label}</p>
     <Select value={v ?? ""} onValueChange={set}>
-      <SelectTrigger className="rounded-xl"><SelectValue placeholder="Pick a place" /></SelectTrigger>
+      <SelectTrigger aria-label={label} className="h-11 w-full rounded-lg"><SelectValue placeholder="Pick a place" /></SelectTrigger>
       <SelectContent>
         {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.location_name}</SelectItem>)}
       </SelectContent>
     </Select>
+    </div>
   );
 
   return (
-    <AppShell title="Location Comparison" subtitle="Scores and satellite images side by side">
-      <div className="grid gap-4 md:grid-cols-2">
-        {picker(idA, setA)}
-        {picker(idB, setB)}
-      </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <Panel title="Satellite images" subtitle={`${locA?.location_name ?? "—"} vs ${locB?.location_name ?? "—"}`}>
-          <div className="grid grid-cols-2 gap-3">
-            <Satellite loc={locA} />
-            <Satellite loc={locB} />
+    <AppShell title="Location Comparison" subtitle="Environmental scores and satellite views">
+      <div className="mx-auto max-w-6xl space-y-8">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {picker("First location", idA, setA)}
+          {picker("Second location", idB, setB)}
+        </div>
+
+        <section aria-labelledby="factor-heading" className="min-w-0 border-y border-border py-6">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <h2 id="factor-heading" className="font-display text-lg font-semibold">Factor comparison</h2>
+            <span className="text-xs text-muted-foreground">Score / 100</span>
           </div>
-          <p className="mt-4 mb-2 text-xs text-muted-foreground">Overlay slider — drag to compare</p>
-          <div className="relative">
-            <Satellite loc={locB} />
-            <div className="absolute inset-0 overflow-hidden" style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}>
-              <Satellite loc={locA} />
-            </div>
-            <div className="absolute inset-y-0 w-0.5 bg-primary" style={{ left: `${split}%` }} />
+          <div className="mb-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm bg-chart-1" />{locA?.location_name ?? "First location"}</span>
+            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm bg-chart-2" />{locB?.location_name ?? "Second location"}</span>
           </div>
-          <input type="range" min={0} max={100} value={split} onChange={(e) => setSplit(+e.target.value)} className="mt-3 w-full accent-primary" />
-        </Panel>
-        <Panel title="Factor comparison">
-          <div className="space-y-4">
-            {FACTORS.map((f) => {
-              const va = Number(sA?.[f.key] ?? 0);
-              const vb = Number(sB?.[f.key] ?? 0);
-              return (
-                <div key={f.key}>
-                  <div className="mb-1 flex justify-between text-xs">
-                    <span className="text-primary">{Math.round(va)}</span>
-                    <span className="text-muted-foreground">{f.label}</span>
-                    <span className="text-accent-foreground">{Math.round(vb)}</span>
-                  </div>
-                  <div className="flex gap-1">
-                    <div className="flex h-2 flex-1 justify-end rounded bg-secondary"><div className="rounded bg-primary" style={{ width: `${va}%` }} /></div>
-                    <div className="h-2 flex-1 rounded bg-secondary"><div className="h-2 rounded bg-accent" style={{ width: `${vb}%` }} /></div>
-                  </div>
+          <div className="space-y-6">
+            {FACTORS.map((f) => (
+              <div key={f.key} className="grid gap-2 sm:grid-cols-[120px_minmax(0,1fr)] sm:gap-5">
+                <h3 className="text-sm font-medium sm:pt-1">{f.label}</h3>
+                <div className="space-y-2.5">
+                  {[{ score: sA, loc: locA, color: "bg-chart-1" }, { score: sB, loc: locB, color: "bg-chart-2" }].map(({ score, loc, color }, i) => {
+                    const raw = score?.[f.key];
+                    const value = typeof raw === "number" ? Math.max(0, Math.min(100, raw)) : undefined;
+                    return (
+                      <div key={i} className="grid grid-cols-[minmax(0,1fr)_40px] items-center gap-3" aria-label={`${f.label}, ${loc?.location_name ?? "Location"}: ${value === undefined ? "No data" : Math.round(value)}`}>
+                        <div className="h-3 overflow-hidden rounded-sm bg-secondary/70">
+                          {value !== undefined && <div className={`h-full rounded-sm ${color}`} style={{ width: `${value}%` }} />}
+                        </div>
+                        <span className="text-right text-sm tabular-nums text-foreground">{value === undefined ? "—" : Math.round(value)}</span>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
-        </Panel>
+          <div className="mt-6 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+            <span>{locA?.location_name}: {sA?.date ?? "No readings"}</span>
+            <span>{locB?.location_name}: {sB?.date ?? "No readings"}</span>
+          </div>
+        </section>
+
+        <section aria-labelledby="satellite-heading" className="min-w-0 pb-6">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <h2 id="satellite-heading" className="font-display text-lg font-semibold">Satellite comparison</h2>
+            <div className="flex gap-1" role="group" aria-label="Image comparison mode">
+              <Button size="sm" variant={imageMode === "side" ? "secondary" : "ghost"} aria-pressed={imageMode === "side"} onClick={() => setImageMode("side")}>Side by side</Button>
+              <Button size="sm" variant={imageMode === "swipe" ? "secondary" : "ghost"} aria-pressed={imageMode === "swipe"} onClick={() => setImageMode("swipe")}>Swipe</Button>
+            </div>
+          </div>
+          {imageMode === "side" ? (
+            <div className="grid gap-5 sm:grid-cols-2">
+              {[locA, locB].map((loc, i) => <figure key={i} className="min-w-0"><Satellite loc={loc} /><figcaption className="mt-3 text-sm font-medium">{loc?.location_name ?? "Select a location"}</figcaption></figure>)}
+            </div>
+          ) : (
+            <div className="mx-auto max-w-2xl">
+              <div className="relative overflow-hidden rounded-lg">
+                <Satellite loc={locB} />
+                <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}><Satellite loc={locA} /></div>
+                <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-foreground" style={{ left: `${split}%` }} />
+              </div>
+              <Slider className="mt-5" min={0} max={100} value={[split]} onValueChange={(values) => setSplit(values[0] ?? 50)} aria-label="Satellite image split" />
+              <div className="mt-3 flex justify-between gap-4 text-sm"><span>{locA?.location_name}</span><span className="text-right">{locB?.location_name}</span></div>
+            </div>
+          )}
+          <p className="mt-4 text-xs text-muted-foreground">Imagery © Esri, Maxar, Earthstar Geographics. Capture dates may vary.</p>
+        </section>
       </div>
     </AppShell>
   );
