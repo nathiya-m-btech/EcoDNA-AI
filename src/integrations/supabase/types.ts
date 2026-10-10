@@ -102,6 +102,88 @@ export type Database = {
           },
         ]
       }
+      eco_alert_actions: {
+        Row: {
+          alert_id: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_id: string
+          id?: string
+          status: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          alert_id?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eco_alert_actions_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eco_simulations: {
+        Row: {
+          baseline: Json
+          baseline_date: string | null
+          created_at: string
+          id: string
+          location_id: string
+          model_version: string
+          name: string
+          result: Json
+          settings: Json
+          target_name: string | null
+          user_id: string
+        }
+        Insert: {
+          baseline: Json
+          baseline_date?: string | null
+          created_at?: string
+          id?: string
+          location_id: string
+          model_version: string
+          name: string
+          result: Json
+          settings: Json
+          target_name?: string | null
+          user_id?: string
+        }
+        Update: {
+          baseline?: Json
+          baseline_date?: string | null
+          created_at?: string
+          id?: string
+          location_id?: string
+          model_version?: string
+          name?: string
+          result?: Json
+          settings?: Json
+          target_name?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eco_simulations_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       environmental_data: {
         Row: {
           air_quality: number
