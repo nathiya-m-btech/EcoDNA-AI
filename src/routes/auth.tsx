@@ -9,6 +9,7 @@ import { Particles } from "@/components/eco/particles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuthUser } from "@/lib/eco/use-auth";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -36,6 +37,7 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuthUser();
 
   const signInWithGoogle = async () => {
     setGoogleBusy(true);
@@ -45,8 +47,10 @@ function AuthPage() {
       });
       if (result.error) throw result.error;
       if (result.redirected) return;
-      toast.success("Signed in with Google");
-      navigate({ to: "/dashboard" });
+       const { data, error } = await supabase.auth.getUser();
+       if (error || !data.user) throw new Error("Google sign-in did not complete. Please try again.");
+       toast.success("Signed in with Google");
+       await navigate({ to: "/dashboard", replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Google sign-in failed");
     } finally {
@@ -55,14 +59,8 @@ function AuthPage() {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard" });
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate({ to: "/dashboard" });
-    });
-    return () => sub.subscription.unsubscribe();
-  }, [navigate]);
+    if (user) void navigate({ to: "/dashboard", replace: true });
+  }, [user, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +71,7 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}/auth`,
             data: { full_name: name },
           },
         });
