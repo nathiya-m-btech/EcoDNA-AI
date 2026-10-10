@@ -1,131 +1,100 @@
-import { useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
+import { Download, Play, RotateCcw, Save } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/eco/app-shell";
-import { Panel, StatCard } from "@/components/eco/panel";
-import { ScoreRing } from "@/components/eco/score-ring";
-import { FactorRadar } from "@/components/eco/charts";
-import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
+import { StatCard } from "@/components/eco/panel";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { useLocationStore } from "@/lib/eco/location-store";
 import { useLocationInsight } from "@/lib/eco/derive";
-import { useRecoveryActions } from "@/lib/eco/queries";
-import { RECOVERY_LEVERS, simulateRecovery, type LeverKey, type Factors } from "@/lib/eco/scoring";
+import { DEFAULT_SETTINGS, ecosystemBaseline, INDICATORS, runEcosystemSimulation, SCENARIOS, SIMULATION_VERSION, simulationResources, type EcosystemState, type SimulationSettings } from "@/lib/eco/simulation";
+import { useSaveSimulation, useSimulationHistory, type SimulationRecord } from "@/lib/eco/simulation-history";
+import { exportSimulation } from "@/lib/eco/simulation-export";
 
+const EcosystemScene = lazy(() => import("@/components/eco/ecosystem-scene"));
 export const Route = createFileRoute("/_authenticated/recovery")({
-  head: () => ({
-    meta: [
-      { title: "Recovery Simulator — EcoDNA AI" },
-      { name: "description", content: "Simulate restoration levers and see the projected environmental DNA score." },
-      { property: "og:title", content: "Recovery Simulator — EcoDNA AI" },
-      { property: "og:description", content: "Model restoration scenarios before investing." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: RecoveryPage,
+  validateSearch: (search: Record<string, unknown>) => ({ target: typeof search.target === "string" ? search.target : undefined }),
+  head: () => ({ meta: [
+    { title: "Recovery Simulator — EcoDNA AI" },
+    { name: "description", content: "Explore restoration scenarios with interactive ecosystems, before-and-after indicators and saved demonstration simulations." },
+    { property: "og:title", content: "Recovery Simulator — EcoDNA AI" },
+    { property: "og:description", content: "Compare and save environmental restoration scenarios." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
+  ] }), component: RecoveryPage,
 });
-
-const ZERO = Object.fromEntries(RECOVERY_LEVERS.map((l) => [l.key, 0])) as Record<LeverKey, number>;
-
+const CONTROLS: { key: keyof SimulationSettings; label: string; max: number; min: number; unit: string }[] = [
+  { key: "reforestation", label: "Reforestation effort", min: 0, max: 100, unit: "%" },
+  { key: "waterSupport", label: "Water support", min: 0, max: 100, unit: "%" },
+  { key: "pollutionReduction", label: "Pollution reduction", min: 0, max: 100, unit: "%" },
+  { key: "rainfall", label: "Rainfall relative to baseline", min: 0, max: 200, unit: "%" },
+  { key: "duration", label: "Simulation duration", min: 30, max: 365, unit: " days" },
+];
 function RecoveryPage() {
   const { location, locationId } = useLocationStore();
   const insight = useLocationInsight(locationId);
-  const { data: actions } = useRecoveryActions(locationId);
-  const [levers, setLevers] = useState<Record<LeverKey, number>>(ZERO);
-
-  const base: Factors = insight.factors ?? {
-    air: 60,
-    water: 60,
-    biodiversity: 60,
-    waste: 40,
-    weather: 60,
-    greenCover: 55,
+  const { target } = Route.useSearch();
+  const history = useSimulationHistory(locationId);
+  const save = useSaveSimulation();
+  const [settings, setSettings] = useState<SimulationSettings>(DEFAULT_SETTINGS);
+  const [name, setName] = useState("Restoration scenario");
+  const [run, setRun] = useState<SimulationRecord | null>(null);
+  const [day, setDay] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  useEffect(() => { setRun(null); setDay(0); setSelected([]); setSettings(DEFAULT_SETTINGS); }, [locationId]);
+  const baseline = run?.baseline ?? (insight.factors ? ecosystemBaseline(insight.factors, insight.latest?.humidity) : null);
+  const stage = run && baseline ? runEcosystemSimulation(baseline, run.settings, day) : baseline;
+  const changed = !!run && JSON.stringify(settings) !== JSON.stringify(run.settings);
+  const execute = () => {
+    if (!baseline || !locationId || !name.trim()) return;
+    const base = insight.factors ? ecosystemBaseline(insight.factors, insight.latest?.humidity) : baseline;
+    setRun({ id: "", location_id: locationId, name: name.trim(), model_version: SIMULATION_VERSION, baseline_date: insight.latest?.date ?? null, baseline: base, settings: { ...settings }, result: runEcosystemSimulation(base, settings), target_name: target ?? null, created_at: new Date().toISOString() });
+    setDay(settings.duration);
+    toast.success("Simulation complete — demonstration estimate");
   };
-  const sim = simulateRecovery(base, levers);
-  const gain = sim.score - insight.score;
-
-  const radar = [
-    { factor: "Air", value: sim.factors.air },
-    { factor: "Water", value: sim.factors.water },
-    { factor: "Biodiversity", value: sim.factors.biodiversity },
-    { factor: "Waste", value: Math.max(0, 100 - sim.factors.waste) },
-    { factor: "Weather", value: sim.factors.weather },
-    { factor: "Green cover", value: sim.factors.greenCover },
-  ];
-
-  return (
-    <AppShell
-      title="Recovery Simulator"
-      subtitle={location ? `Model interventions for ${location.location_name}` : "Model restoration interventions"}
-    >
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Current score" value={insight.score} />
-        <StatCard label="Simulated score" value={sim.score} tone="lime" icon={<Sparkles className="h-4 w-4" />} />
-        <StatCard label="Projected gain" value={`${gain > 0 ? "+" : ""}${gain} pts`} tone={gain > 0 ? "emerald" : "amber"} />
+  const persist = async () => {
+    if (!run) return;
+    setBusy(true);
+    try { const { id: _id, created_at: _date, ...record } = run; setRun(await save(record)); toast.success("Simulation saved"); }
+    catch (err) { toast.error(err instanceof Error ? err.message : "Could not save simulation"); }
+    finally { setBusy(false); }
+  };
+  const exportReport = async (record: SimulationRecord, format: "csv" | "pdf") => {
+    try { await exportSimulation(record, format); } catch { toast.error("Could not export report"); }
+  };
+  const open = (r: SimulationRecord) => { setRun(r); setSettings(r.settings); setName(r.name); setDay(r.settings.duration); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const comparisons = baseline ? SCENARIOS.map(s => ({ ...s, settings: { ...s.settings, rainfall: settings.rainfall, duration: settings.duration }, result: runEcosystemSimulation(baseline, { ...s.settings, rainfall: settings.rainfall, duration: settings.duration }) })) : [];
+  return <AppShell title="Recovery Simulator" subtitle={location ? `Restoration scenarios for ${location.location_name}` : "Restoration scenarios"}>
+    <p className="mb-5 text-sm text-muted-foreground">Demonstration model · {SIMULATION_VERSION} · Not a validated ecological forecast. Moisture and water availability are estimated proxies, not measured soil or water volumes.</p>
+    {target && <p className="mb-4 text-sm text-primary">Hotspot target: {target}</p>}
+    <div className="grid gap-4 sm:grid-cols-3">
+      <StatCard label="Baseline DNA score" value={baseline?.score ?? "—"} />
+      <StatCard label="Projected DNA score" value={run?.result.score ?? "—"} tone="lime" />
+      <StatCard label="Projected change" value={run ? `${run.result.score - run.baseline.score >= 0 ? "+" : ""}${run.result.score - run.baseline.score} pts` : "—"} tone="teal" />
+    </div>
+    <section className="mt-8 grid gap-8 border-y border-border py-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <div className="min-w-0 space-y-5">
+        <h2 className="font-display text-lg font-semibold">Scenario settings</h2>
+        <div className="space-y-2"><Label htmlFor="scenario-name">Scenario name</Label><Input id="scenario-name" value={name} maxLength={80} onChange={e => setName(e.target.value)} /></div>
+        {CONTROLS.map(c => <div key={c.key}><div className="mb-3 flex justify-between gap-3 text-sm"><Label>{c.label}</Label><span className="shrink-0 tabular-nums text-primary">{settings[c.key]}{c.unit}</span></div><Slider aria-label={c.label} min={c.min} max={c.max} step={c.key === "duration" ? 5 : 10} value={[settings[c.key]]} onValueChange={v => setSettings(p => ({ ...p, [c.key]: v[0] ?? c.min }))} /></div>)}
+        <div className="flex flex-wrap gap-2"><Button onClick={execute} disabled={!baseline || !name.trim() || insight.loading}><Play className="h-4 w-4" />Run Simulation</Button><Button aria-label="Reset simulation" title="Reset simulation" size="icon" variant="outline" onClick={() => { setSettings(DEFAULT_SETTINGS); setRun(null); setDay(0); }}><RotateCcw className="h-4 w-4" /></Button></div>
+        {changed && <p className="text-xs text-risk-medium">Settings changed. Run again to update the projected result.</p>}
+        {!baseline && <p className="text-sm text-muted-foreground">No baseline readings yet. Sync this location from the dashboard first.</p>}
       </div>
-
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
-        <Panel
-          className="lg:col-span-2"
-          title="Intervention levers"
-          subtitle="Adjust effort intensity for each restoration programme"
-          action={
-            <Button variant="outline" size="sm" onClick={() => setLevers(ZERO)}>
-              Reset
-            </Button>
-          }
-        >
-          <div className="space-y-6">
-            {RECOVERY_LEVERS.map((lever) => (
-              <div key={lever.key}>
-                <div className="flex items-center justify-between text-sm">
-                  <span>{lever.label}</span>
-                  <span className="text-muted-foreground">{levers[lever.key]}% effort</span>
-                </div>
-                <Slider
-                  className="mt-3"
-                  value={[levers[lever.key]]}
-                  max={100}
-                  step={5}
-                  onValueChange={([v]) => setLevers((p) => ({ ...p, [lever.key]: v ?? 0 }))}
-                />
-                <p className="mt-1 text-xs text-muted-foreground">Up to +{lever.max} points at full deployment.</p>
-              </div>
-            ))}
-          </div>
-        </Panel>
-
-        <Panel title="Simulated DNA" subtitle="Outcome of the current scenario">
-          <div className="flex flex-col items-center gap-4">
-            <ScoreRing score={sim.score} size={180} />
-            <FactorRadar data={radar} height={250} />
-          </div>
-        </Panel>
+      <div className="min-w-0">
+        <div className="flex justify-between gap-4 text-sm font-medium"><span>Before · baseline</span><span>After · day {day}</span></div>
+        {baseline && stage && <Suspense fallback={<div className="h-[460px] animate-pulse bg-secondary/30" />}><EcosystemScene before={baseline} after={stage} /></Suspense>}
+        <Slider aria-label="Simulation day" value={[day]} min={0} max={run?.settings.duration ?? settings.duration} step={1} disabled={!run} onValueChange={v => setDay(v[0] ?? 0)} />
+        <div className="mt-3 flex justify-between text-xs text-muted-foreground"><span>Day 0</span><span>{run?.settings.duration ?? settings.duration} days · projected</span></div>
+        <p className="mt-4 text-xs text-muted-foreground">Conceptual terrain, not satellite-derived geometry. Baseline factors use existing readings; soil moisture uses humidity as a proxy (50 if missing), and water availability is a demonstration proxy. No calibrated uncertainty range is available.</p>
       </div>
-
-      <Panel className="mt-4" title="Recommended actions" subtitle="AI-ranked interventions from stored analysis">
-        <div className="grid gap-3 md:grid-cols-2">
-          {(actions ?? []).map((a) => (
-            <div key={a.id} className="rounded-2xl border border-border bg-secondary/40 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-sm font-semibold">{a.action_name}</h3>
-                <Badge variant="outline">{a.action_type ?? "action"}</Badge>
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">{a.recommendation}</p>
-              <p className="mt-3 text-xs">
-                <span className="text-muted-foreground">Impact: </span>
-                <span className="text-primary">+{a.expected_improvement ?? 0} pts</span>
-                <span className="text-muted-foreground"> → {a.predicted_score ?? "—"}</span>
-              </p>
-            </div>
-          ))}
-          {(actions ?? []).length === 0 && (
-            <p className="text-sm text-muted-foreground">No stored recovery actions for this location yet.</p>
-          )}
-        </div>
-      </Panel>
-    </AppShell>
-  );
+    </section>
+    {baseline && stage && <section className="py-6"><h2 className="mb-5 font-display text-lg font-semibold">Before and after · indicators /100</h2><div className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">{INDICATORS.map(i => <div key={i.label} className="border-b border-border pb-3"><p className="text-sm text-muted-foreground">{i.label}</p><div className="mt-2 flex justify-between text-xl tabular-nums"><span>{Math.round(i.value(baseline))}</span><span className="text-primary">{Math.round(i.value(stage))}</span></div></div>)}</div></section>}
+    {run && <div className="mb-6 flex flex-wrap gap-2"><Button onClick={persist} disabled={busy || !!run.id}><Save className="h-4 w-4" />{run.id ? "Saved" : busy ? "Saving…" : "Save simulation"}</Button><Button variant="outline" onClick={() => exportReport(run, "csv")}><Download className="h-4 w-4" />CSV</Button><Button variant="outline" onClick={() => exportReport(run, "pdf")}><Download className="h-4 w-4" />PDF</Button></div>}
+    <section className="border-y border-border py-6"><h2 className="mb-2 font-display text-lg font-semibold">Scenario comparison</h2><p className="mb-5 text-xs text-muted-foreground">Same baseline, {settings.duration} days, {settings.rainfall}% rainfall. Resource estimates are illustrative per hectare.</p><div className="grid gap-6 lg:grid-cols-3">{comparisons.map(s => { const resources = simulationResources(s.settings); return <article key={s.name} className="min-w-0 space-y-3 border-l-2 border-primary/40 pl-4"><h3 className="font-semibold">{s.name}</h3><p className="font-display text-2xl text-primary">{s.result.score} <span className="text-xs text-muted-foreground">DNA /100</span></p><dl className="space-y-1 text-xs">{INDICATORS.slice(1).map(i => <div key={i.label} className="flex justify-between gap-2"><dt>{i.label}</dt><dd>{Math.round(i.value(s.result))}</dd></div>)}</dl><p className="text-xs text-muted-foreground">{resources.seedlings} seedlings · {resources.water} m³ support water · {resources.effort} effort units / ha</p><p className="text-xs text-muted-foreground">{s.tradeoff}</p><Button size="sm" variant="outline" onClick={() => { setSettings(s.settings); setName(s.name); toast.success("Scenario settings loaded. Run Simulation to preview."); }}>Use scenario</Button></article>; })}</div></section>
+    <section className="py-6"><h2 className="mb-4 font-display text-lg font-semibold">Saved simulations</h2>{history.isError && <Button variant="outline" onClick={() => history.refetch()}>Retry history</Button>}{!history.isLoading && !history.isError && !history.data?.length && <p className="text-sm text-muted-foreground">No saved simulations for this location.</p>}<div className="space-y-3">{history.data?.map(r => <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-3"><div className="flex min-w-0 items-center gap-3"><input aria-label={`Compare ${r.name}`} type="checkbox" checked={selected.includes(r.id)} onChange={e => setSelected(p => e.target.checked ? [...p, r.id] : p.filter(id => id !== r.id))} /><div><p className="break-words text-sm font-medium">{r.name} · {r.baseline.score} → {r.result.score}</p><p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()} · {r.model_version}</p></div></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => open(r)}>Reopen</Button><Button size="sm" variant="ghost" onClick={() => exportReport(r, "csv")}>CSV</Button><Button size="sm" variant="ghost" onClick={() => exportReport(r, "pdf")}>PDF</Button></div></div>)}</div>{selected.length > 0 && <div className="mt-5 overflow-x-auto"><table className="w-full text-left text-sm"><caption className="mb-3 text-left">Selected saved scenarios · each retains its original baseline</caption><thead><tr><th className="p-2">Scenario / baseline</th>{INDICATORS.map(i => <th className="p-2" key={i.label}>{i.label}</th>)}</tr></thead><tbody>{history.data?.filter(r => selected.includes(r.id)).map(r => <tr key={r.id}><td className="p-2">{r.name} / {r.baseline_date}</td>{INDICATORS.map(i => <td className="p-2" key={i.label}>{Math.round(i.value(r.result))}</td>)}</tr>)}</tbody></table></div>}</section>
+  </AppShell>;
 }
