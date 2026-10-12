@@ -4,7 +4,7 @@ import { AlertTriangle, Brain, Droplets, Leaf, Pause, Play, Recycle, RotateCcw, 
 import { AppShell } from "@/components/eco/app-shell";
 import { Panel, StatCard } from "@/components/eco/panel";
 import { ScoreRing } from "@/components/eco/score-ring";
-import { ScoreAreaChart, ComparisonBars, FactorRadar } from "@/components/eco/charts";
+import { ScoreAreaChart, FactorRadar } from "@/components/eco/charts";
 import { useLocationStore } from "@/lib/eco/location-store";
 import { useLocationInsight, factorsFromRow } from "@/lib/eco/derive";
 import { useAlerts, useEnvData, useHotspots, useLocations } from "@/lib/eco/queries";
@@ -189,8 +189,24 @@ function DashboardPage() {
         <Panel title="Factor signature" subtitle="Normalised factor strengths">
           {radar.length > 0 ? <FactorRadar data={radar} /> : <p className="py-16 text-center text-sm text-muted-foreground">No factor data.</p>}
         </Panel>
-        <Panel title="Location comparison" subtitle="Latest DNA score by monitored location">
-          {comparison.length > 0 ? <ComparisonBars data={comparison} /> : <p className="py-16 text-center text-sm text-muted-foreground">No locations.</p>}
+        <Panel
+          title="Location comparison"
+          subtitle="Top locations by latest DNA score"
+          action={<Link to="/compare" className="text-xs text-primary hover:underline">Compare in detail</Link>}
+        >
+          {comparison.length > 0 ? (
+            <ul className="space-y-3">
+              {[...comparison].sort((a, b) => b.score - a.score).slice(0, 6).map((c) => (
+                <li key={c.name} className="grid grid-cols-[minmax(0,9rem)_1fr_2.5rem] items-center gap-3 text-sm">
+                  <span className="truncate" title={c.name}>{c.name}</span>
+                  <span className="h-2.5 overflow-hidden rounded-full bg-secondary">
+                    <span className="block h-full rounded-full bg-primary" style={{ width: `${c.score}%` }} />
+                  </span>
+                  <span className="text-right font-display tabular-nums">{c.score}</span>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="py-16 text-center text-sm text-muted-foreground">No locations.</p>}
         </Panel>
       </div>
 

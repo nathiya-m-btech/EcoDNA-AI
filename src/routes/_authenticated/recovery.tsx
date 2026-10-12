@@ -44,7 +44,18 @@ function RecoveryPage() {
   const [day, setDay] = useState(0);
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
-  useEffect(() => { setRun(null); setDay(0); setSelected([]); setSettings(DEFAULT_SETTINGS); }, [locationId]);
+  const [playing, setPlaying] = useState(false);
+  useEffect(() => { setRun(null); setDay(0); setPlaying(false); setSelected([]); setSettings(DEFAULT_SETTINGS); }, [locationId]);
+  const total = run?.settings.duration ?? settings.duration;
+  useEffect(() => {
+    if (!playing) return;
+    const step = Math.max(1, Math.round(total / 60));
+    const t = setInterval(() => setDay(d => {
+      if (d + step >= total) { setPlaying(false); toast.success("Simulation complete — demonstration estimate"); return total; }
+      return d + step;
+    }), 80);
+    return () => clearInterval(t);
+  }, [playing, total]);
   const baseline = run?.baseline ?? (insight.factors ? ecosystemBaseline(insight.factors, insight.latest?.humidity) : null);
   const stage = run && baseline ? runEcosystemSimulation(baseline, run.settings, day) : baseline;
   const changed = !!run && JSON.stringify(settings) !== JSON.stringify(run.settings);
@@ -52,9 +63,10 @@ function RecoveryPage() {
     if (!baseline || !locationId || !name.trim()) return;
     const base = insight.factors ? ecosystemBaseline(insight.factors, insight.latest?.humidity) : baseline;
     setRun({ id: "", location_id: locationId, name: name.trim(), model_version: SIMULATION_VERSION, baseline_date: insight.latest?.date ?? null, baseline: base, settings: { ...settings }, result: runEcosystemSimulation(base, settings), target_name: target ?? null, created_at: new Date().toISOString() });
-    setDay(settings.duration);
-    toast.success("Simulation complete — demonstration estimate");
+    setDay(0);
+    setPlaying(true);
   };
+  const phase = !run ? "1 · Adjust settings" : playing ? `2 · Simulating day ${day} of ${total}` : day >= total ? "3 · Result ready — save or export" : `Paused at day ${day}`;
   const persist = async () => {
     if (!run) return;
     setBusy(true);
