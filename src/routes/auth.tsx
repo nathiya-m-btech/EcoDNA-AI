@@ -42,25 +42,38 @@ function AuthPage() {
   const signInWithGoogle = async () => {
     setGoogleBusy(true);
     try {
+      sessionStorage.setItem("eco-google-pending", "1");
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: `${window.location.origin}/auth`,
       });
       if (result.error) throw result.error;
       if (result.redirected) return;
-       const { data, error } = await supabase.auth.getUser();
-       if (error || !data.user) throw new Error("Google sign-in did not complete. Please try again.");
-       toast.success("Signed in with Google");
-       await navigate({ to: "/dashboard", replace: true });
+      sessionStorage.removeItem("eco-google-pending");
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data.user) throw new Error("Google sign-in did not complete. Please try again.");
+      toast.success("Signed in with Google");
+      await navigate({ to: "/dashboard", replace: true });
     } catch (err) {
+      sessionStorage.removeItem("eco-google-pending");
       toast.error(err instanceof Error ? err.message : "Google sign-in failed");
     } finally {
       setGoogleBusy(false);
     }
   };
 
+  // Only auto-continue when returning from a Google sign-in the user started.
   useEffect(() => {
-    if (user) void navigate({ to: "/dashboard", replace: true });
+    if (user && sessionStorage.getItem("eco-google-pending")) {
+      sessionStorage.removeItem("eco-google-pending");
+      toast.success("Signed in with Google");
+      void navigate({ to: "/dashboard", replace: true });
+    }
   }, [user, navigate]);
+
+  const signOutExisting = async () => {
+    await supabase.auth.signOut();
+    toast.success("Signed out");
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,6 +124,15 @@ function AuthPage() {
           Environmental Digital DNA intelligence for every monitored location.
         </p>
 
+        {user && (
+          <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-3 text-sm">
+            <p>Signed in as <span className="font-medium">{user.email}</span></p>
+            <div className="mt-2 flex gap-2">
+              <Button size="sm" onClick={() => navigate({ to: "/dashboard" })}>Continue to dashboard</Button>
+              <Button size="sm" variant="outline" onClick={signOutExisting}>Sign out</Button>
+            </div>
+          </div>
+        )}
         <form onSubmit={submit} className="mt-6 space-y-4">
           {mode === "signup" && (
             <div className="space-y-2">

@@ -1,6 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useAuthUser } from "@/lib/eco/use-auth";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Brain,
@@ -75,9 +73,6 @@ const FEATURES = [
 ] as const;
 
 function Landing() {
-  const { user } = useAuthUser();
-  const navigate = useNavigate();
-  useEffect(() => { if (user) void navigate({ to: "/dashboard", replace: true }); }, [user, navigate]);
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div className="eco-grid pointer-events-none absolute inset-0 opacity-40" />

@@ -44,7 +44,7 @@ export default function EcosystemScene({ before, after }: { before: EcosystemSta
       const group = new THREE.Group(); group.position.x = side === 0 ? -4.7 : 4.7; scene.add(group);
       const terrain = new THREE.PlaneGeometry(8, 8, 20, 20);
       terrain.rotateX(-Math.PI / 2);
-      const pos = terrain.attributes.position;
+      const pos = terrain.getAttribute("position") as THREE.BufferAttribute;
       for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i), z = pos.getZ(i);
         pos.setY(i, 0.12 + Math.sin(x * 0.8) * Math.cos(z * 0.6) * 0.22);

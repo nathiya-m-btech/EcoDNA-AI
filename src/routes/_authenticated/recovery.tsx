@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, Play, RotateCcw, Save } from "lucide-react";
+import { Download, Pause, Play, RotateCcw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/eco/app-shell";
 import { StatCard } from "@/components/eco/panel";
@@ -16,7 +16,7 @@ import { exportSimulation } from "@/lib/eco/simulation-export";
 
 const EcosystemScene = lazy(() => import("@/components/eco/ecosystem-scene"));
 export const Route = createFileRoute("/_authenticated/recovery")({
-  validateSearch: (search: Record<string, unknown>) => ({ target: typeof search.target === "string" ? search.target : undefined }),
+  validateSearch: (search: Record<string, unknown>) => ({ target: typeof search['target'] === "string" ? search['target'] : undefined }),
   head: () => ({ meta: [
     { title: "Recovery Simulator — EcoDNA AI" },
     { name: "description", content: "Explore restoration scenarios with interactive ecosystems, before-and-after indicators and saved demonstration simulations." },
@@ -44,7 +44,18 @@ function RecoveryPage() {
   const [day, setDay] = useState(0);
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
-  useEffect(() => { setRun(null); setDay(0); setSelected([]); setSettings(DEFAULT_SETTINGS); }, [locationId]);
+  const [playing, setPlaying] = useState(false);
+  useEffect(() => { setRun(null); setDay(0); setPlaying(false); setSelected([]); setSettings(DEFAULT_SETTINGS); }, [locationId]);
+  const total = run?.settings.duration ?? settings.duration;
+  useEffect(() => {
+    if (!playing) return;
+    const step = Math.max(1, Math.round(total / 60));
+    const t = setInterval(() => setDay(d => {
+      if (d + step >= total) { setPlaying(false); toast.success("Simulation complete — demonstration estimate"); return total; }
+      return d + step;
+    }), 80);
+    return () => clearInterval(t);
+  }, [playing, total]);
   const baseline = run?.baseline ?? (insight.factors ? ecosystemBaseline(insight.factors, insight.latest?.humidity) : null);
   const stage = run && baseline ? runEcosystemSimulation(baseline, run.settings, day) : baseline;
   const changed = !!run && JSON.stringify(settings) !== JSON.stringify(run.settings);
@@ -52,9 +63,10 @@ function RecoveryPage() {
     if (!baseline || !locationId || !name.trim()) return;
     const base = insight.factors ? ecosystemBaseline(insight.factors, insight.latest?.humidity) : baseline;
     setRun({ id: "", location_id: locationId, name: name.trim(), model_version: SIMULATION_VERSION, baseline_date: insight.latest?.date ?? null, baseline: base, settings: { ...settings }, result: runEcosystemSimulation(base, settings), target_name: target ?? null, created_at: new Date().toISOString() });
-    setDay(settings.duration);
-    toast.success("Simulation complete — demonstration estimate");
+    setDay(0);
+    setPlaying(true);
   };
+  const phase = !run ? "1 · Adjust settings" : playing ? `2 · Simulating day ${day} of ${total}` : day >= total ? "3 · Result ready — save or export" : `Paused at day ${day}`;
   const persist = async () => {
     if (!run) return;
     setBusy(true);
@@ -65,7 +77,7 @@ function RecoveryPage() {
   const exportReport = async (record: SimulationRecord, format: "csv" | "pdf") => {
     try { await exportSimulation(record, format); } catch { toast.error("Could not export report"); }
   };
-  const open = (r: SimulationRecord) => { setRun(r); setSettings(r.settings); setName(r.name); setDay(r.settings.duration); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const open = (r: SimulationRecord) => { setRun(r); setSettings(r.settings); setName(r.name); setPlaying(false); setDay(r.settings.duration); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const comparisons = baseline ? SCENARIOS.map(s => ({ ...s, settings: { ...s.settings, rainfall: settings.rainfall, duration: settings.duration }, result: runEcosystemSimulation(baseline, { ...s.settings, rainfall: settings.rainfall, duration: settings.duration }) })) : [];
   return <AppShell title="Recovery Simulator" subtitle={location ? `Restoration scenarios for ${location.location_name}` : "Restoration scenarios"}>
     <p className="mb-5 text-sm text-muted-foreground">Demonstration model · {SIMULATION_VERSION} · Not a validated ecological forecast. Moisture and water availability are estimated proxies, not measured soil or water volumes.</p>
@@ -80,14 +92,14 @@ function RecoveryPage() {
         <h2 className="font-display text-lg font-semibold">Scenario settings</h2>
         <div className="space-y-2"><Label htmlFor="scenario-name">Scenario name</Label><Input id="scenario-name" value={name} maxLength={80} onChange={e => setName(e.target.value)} /></div>
         {CONTROLS.map(c => <div key={c.key}><div className="mb-3 flex justify-between gap-3 text-sm"><Label>{c.label}</Label><span className="shrink-0 tabular-nums text-primary">{settings[c.key]}{c.unit}</span></div><Slider aria-label={c.label} min={c.min} max={c.max} step={c.key === "duration" ? 5 : 10} value={[settings[c.key]]} onValueChange={v => setSettings(p => ({ ...p, [c.key]: v[0] ?? c.min }))} /></div>)}
-        <div className="flex flex-wrap gap-2"><Button onClick={execute} disabled={!baseline || !name.trim() || insight.loading}><Play className="h-4 w-4" />Run Simulation</Button><Button aria-label="Reset simulation" title="Reset simulation" size="icon" variant="outline" onClick={() => { setSettings(DEFAULT_SETTINGS); setRun(null); setDay(0); }}><RotateCcw className="h-4 w-4" /></Button></div>
+        <div className="flex flex-wrap gap-2"><Button onClick={execute} disabled={!baseline || !name.trim() || insight.loading}><Play className="h-4 w-4" />Run Simulation</Button><Button aria-label="Reset simulation" title="Reset simulation" size="icon" variant="outline" onClick={() => { setSettings(DEFAULT_SETTINGS); setRun(null); setDay(0); setPlaying(false); }}><RotateCcw className="h-4 w-4" /></Button></div>
         {changed && <p className="text-xs text-risk-medium">Settings changed. Run again to update the projected result.</p>}
         {!baseline && <p className="text-sm text-muted-foreground">No baseline readings yet. Sync this location from the dashboard first.</p>}
       </div>
       <div className="min-w-0">
-        <div className="flex justify-between gap-4 text-sm font-medium"><span>Before · baseline</span><span>After · day {day}</span></div>
+        <div className="mb-3 flex flex-wrap items-center gap-3"><span className="rounded-full border border-border px-3 py-1 text-xs text-primary">{phase}</span>{run && <Button size="sm" variant="outline" onClick={() => { if (day >= total) setDay(0); setPlaying(p => !p); }}>{playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}{playing ? "Pause" : day >= total ? "Replay" : "Resume"}</Button>}</div><div className="mb-2 h-1.5 overflow-hidden rounded-full bg-secondary"><div className="h-full bg-primary transition-all" style={{ width: `${run ? (day / total) * 100 : 0}%` }} /></div><div className="flex justify-between gap-4 text-sm font-medium"><span>Before · baseline</span><span>After · day {day}</span></div>
         {baseline && stage && <Suspense fallback={<div className="h-[460px] animate-pulse bg-secondary/30" />}><EcosystemScene before={baseline} after={stage} /></Suspense>}
-        <Slider aria-label="Simulation day" value={[day]} min={0} max={run?.settings.duration ?? settings.duration} step={1} disabled={!run} onValueChange={v => setDay(v[0] ?? 0)} />
+        <Slider aria-label="Simulation day" value={[day]} min={0} max={run?.settings.duration ?? settings.duration} step={1} disabled={!run} onValueChange={v => { setPlaying(false); setDay(v[0] ?? 0); }} />
         <div className="mt-3 flex justify-between text-xs text-muted-foreground"><span>Day 0</span><span>{run?.settings.duration ?? settings.duration} days · projected</span></div>
         <p className="mt-4 text-xs text-muted-foreground">Conceptual terrain, not satellite-derived geometry. Baseline factors use existing readings; soil moisture uses humidity as a proxy (50 if missing), and water availability is a demonstration proxy. No calibrated uncertainty range is available.</p>
       </div>
