@@ -16,7 +16,7 @@ import { exportSimulation } from "@/lib/eco/simulation-export";
 
 const EcosystemScene = lazy(() => import("@/components/eco/ecosystem-scene"));
 export const Route = createFileRoute("/_authenticated/recovery")({
-  validateSearch: (search: Record<string, unknown>) => ({ target: typeof search.target === "string" ? search.target : undefined }),
+  validateSearch: (search: Record<string, unknown>) => ({ target: typeof search['target'] === "string" ? search['target'] : undefined }),
   head: () => ({ meta: [
     { title: "Recovery Simulator — EcoDNA AI" },
     { name: "description", content: "Explore restoration scenarios with interactive ecosystems, before-and-after indicators and saved demonstration simulations." },
