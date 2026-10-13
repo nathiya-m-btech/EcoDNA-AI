@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { EcosystemState } from '@/lib/eco/simulation';
 
 /** Browser-only renderer: this module is loaded lazily by the simulator. */
-export default function EcosystemScene({ before, after }: { before: EcosystemState; after: EcosystemState }) {
+export default function EcosystemScene({ before, after, place = 'rural' }: { before: EcosystemState; after: EcosystemState; place?: 'industrial' | 'river' | 'rural' }) {
   const host = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -54,6 +54,18 @@ export default function EcosystemScene({ before, after }: { before: EcosystemSta
       mesh(new THREE.BoxGeometry(8, 0.5, 8), '--secondary', group, 0, -0.22, 0);
       const lake = mesh(new THREE.CircleGeometry(0.6 + state.waterAvailability / 75, 40), '--eco-teal', group, -1.6, 0.38, 1.5);
       lake.rotation.x = -Math.PI / 2; lake.scale.y = 0.68;
+      if (place === 'river') { lake.scale.set(1.2, 3.5, 1); }
+      // The monitoring device stays fixed; only the simulated ecosystem changes.
+      mesh(new THREE.BoxGeometry(0.9, 0.12, 0.65), '--background', group, 0.5, 0.45, 2.6);
+      mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.35, 12), '--eco-mist', group, 0.7, 0.66, 2.6);
+      mesh(new THREE.SphereGeometry(0.08, 10, 8), '--eco-teal', group, 0.2, 0.6, 2.6);
+      mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.8, 8), '--primary', group, 0.9, 0.9, 2.6);
+      if (place === 'industrial') {
+        for (let i = 0; i < 3; i++) {
+          mesh(new THREE.BoxGeometry(1, 0.85, 0.9), '--muted-foreground', group, 1 + i, 0.65, -2.8);
+          mesh(new THREE.CylinderGeometry(0.12, 0.17, 1.5, 10), '--secondary', group, 1 + i, 1.15, -2.8);
+        }
+      }
       const count = Math.round(state.factors.greenCover * 0.65);
       for (let i = 0; i < count; i++) {
         const x = ((i * 2.37) % 7) - 3.5, z = ((i * 3.71) % 7) - 3.5;
@@ -86,6 +98,6 @@ export default function EcosystemScene({ before, after }: { before: EcosystemSta
       cancelAnimationFrame(frame); observer.disconnect(); controls.dispose();
       geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); renderer.dispose(); renderer.domElement.remove();
     };
-  }, [before, after]);
+  }, [before, after, place]);
   return <div ref={host} className="relative h-[360px] w-full sm:h-[460px]" role="img" aria-label="Before and after interactive ecosystems">{failed && <p className="py-20 text-center text-sm text-muted-foreground">3D is unavailable in this browser. Before-and-after indicators remain available below.</p>}</div>;
 }

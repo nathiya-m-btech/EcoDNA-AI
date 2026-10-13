@@ -20,6 +20,7 @@ import { Route as AuthenticatedHotspotsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPredictionsRouteImport } from './routes/_authenticated/predictions'
 import { Route as AuthenticatedRecoveryRouteImport } from './routes/_authenticated/recovery'
 import { Route as AuthenticatedSourcesRouteImport } from './routes/_authenticated/sources'
+import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -76,6 +77,11 @@ const AuthenticatedSourcesRoute = AuthenticatedSourcesRouteImport.update({
   path: '/sources',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedWelcomeRoute = AuthenticatedWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/predictions': typeof AuthenticatedPredictionsRoute
   '/recovery': typeof AuthenticatedRecoveryRoute
   '/sources': typeof AuthenticatedSourcesRoute
+  '/welcome': typeof AuthenticatedWelcomeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/predictions': typeof AuthenticatedPredictionsRoute
   '/recovery': typeof AuthenticatedRecoveryRoute
   '/sources': typeof AuthenticatedSourcesRoute
+  '/welcome': typeof AuthenticatedWelcomeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/_authenticated/predictions': typeof AuthenticatedPredictionsRoute
   '/_authenticated/recovery': typeof AuthenticatedRecoveryRoute
   '/_authenticated/sources': typeof AuthenticatedSourcesRoute
+  '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/predictions'
     | '/recovery'
     | '/sources'
+    | '/welcome'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/predictions'
     | '/recovery'
     | '/sources'
+    | '/welcome'
   id:
     | '__root__'
     | '/'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/_authenticated/predictions'
     | '/_authenticated/recovery'
     | '/_authenticated/sources'
+    | '/_authenticated/welcome'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -240,6 +252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSourcesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/welcome': {
+      id: '/_authenticated/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof AuthenticatedWelcomeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -252,6 +271,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPredictionsRoute: typeof AuthenticatedPredictionsRoute
   AuthenticatedRecoveryRoute: typeof AuthenticatedRecoveryRoute
   AuthenticatedSourcesRoute: typeof AuthenticatedSourcesRoute
+  AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -263,6 +283,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPredictionsRoute: AuthenticatedPredictionsRoute,
   AuthenticatedRecoveryRoute: AuthenticatedRecoveryRoute,
   AuthenticatedSourcesRoute: AuthenticatedSourcesRoute,
+  AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
