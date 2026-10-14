@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { LiveDataControls } from "@/components/eco/live-data-controls";
+import { VirtualConsole } from "@/components/eco/virtual-console";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -125,6 +126,8 @@ function DashboardPage() {
           )}
         </div>
       </div>
+
+      <div className="mb-4"><VirtualConsole view="dashboard" /></div>
 
       {simulating && (
         <Panel className="mb-4" title="Simulation replay" subtitle="Stepping through recorded readings">
