@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { LocationProvider } from "@/lib/eco/location-store";
+import { VirtualProvider } from "@/lib/eco/virtual-store";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -11,7 +12,9 @@ export const Route = createFileRoute("/_authenticated")({
   },
   component: () => (
     <LocationProvider>
-      <Outlet />
+      <VirtualProvider>
+        <Outlet />
+      </VirtualProvider>
     </LocationProvider>
   ),
 });

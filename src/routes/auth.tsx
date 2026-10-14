@@ -52,7 +52,7 @@ function AuthPage() {
       const { data, error } = await supabase.auth.getUser();
       if (error || !data.user) throw new Error("Google sign-in did not complete. Please try again.");
       toast.success("Signed in with Google");
-      await navigate({ to: "/dashboard", replace: true });
+      await navigate({ to: "/welcome", replace: true });
     } catch (err) {
       sessionStorage.removeItem("eco-google-pending");
       toast.error(err instanceof Error ? err.message : "Google sign-in failed");
@@ -66,7 +66,7 @@ function AuthPage() {
     if (user && sessionStorage.getItem("eco-google-pending")) {
       sessionStorage.removeItem("eco-google-pending");
       toast.success("Signed in with Google");
-      void navigate({ to: "/dashboard", replace: true });
+      void navigate({ to: "/welcome", replace: true });
     }
   }, [user, navigate]);
 
@@ -91,7 +91,7 @@ function AuthPage() {
         if (error) throw error;
         if (data.session) {
           toast.success("Account created. Welcome to EcoDNA AI");
-          navigate({ to: "/dashboard" });
+          navigate({ to: "/welcome" });
         } else {
           toast.success("Check your email to confirm your account.");
           setMode("signin");
@@ -100,7 +100,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back to EcoDNA AI");
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/welcome" });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication failed");

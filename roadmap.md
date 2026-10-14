@@ -1,7 +1,7 @@
 # Completion tasks
 - [ ] Generate the green monitoring video and play it after sign-in before opening the dashboard.
-- [ ] Add three virtual monitoring places, four interactive scenarios, and simulated DNA, drift, risk and recovery indicators.
-- [ ] Connect the virtual dashboard to a working recovery simulation and verify playback and scenario controls.
+- [x] Add three virtual monitoring places, four interactive scenarios, and simulated DNA, drift, risk and recovery indicators.
+- [x] Connect the virtual dashboard to a working recovery simulation and verify playback and scenario controls.
 - [x] Make location comparison spacious and verify image comparison.
 - [x] Verify current-location access and separate-page sidebar navigation.
 - [x] Resolve preview errors and verify authenticated comparison flow.
