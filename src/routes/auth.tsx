@@ -128,7 +128,7 @@ function AuthPage() {
           <div className="mt-5 rounded-xl border border-border bg-secondary/40 p-3 text-sm">
             <p>Signed in as <span className="font-medium">{user.email}</span></p>
             <div className="mt-2 flex gap-2">
-              <Button size="sm" onClick={() => navigate({ to: "/dashboard" })}>Continue to dashboard</Button>
+              <Button size="sm" onClick={() => navigate({ to: "/welcome" })}>Continue to dashboard</Button>
               <Button size="sm" variant="outline" onClick={signOutExisting}>Sign out</Button>
             </div>
           </div>
