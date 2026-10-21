@@ -14,3 +14,4 @@
 - Keep the replaceable demonstration ecosystem model in a browser-safe domain module; save immutable settings, baseline, result, and model version for reproducible scenarios.
 - Load the Three.js ecosystem renderer lazily only in authenticated browser views to keep WebGL out of server rendering.
 - Store simulations and alert workflow actions in user-owned tables with owner-scoped RLS so monitoring data remains unchanged.
+- Render the post-sign-in introduction as a browser-only animated simulation driven by the shared demonstration model, not embedded footage, so its readings and terrain remain synchronized.
