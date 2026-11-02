@@ -1,5 +1,5 @@
 # Completion tasks
-- [ ] Replace the post-sign-in video with an interactive green-terrain monitoring simulation and verify automatic dashboard transition.
+- [x] Replace the post-sign-in video with an interactive green-terrain monitoring simulation and verify automatic dashboard transition.
 - [x] Add three virtual monitoring places, four interactive scenarios, and simulated DNA, drift, risk and recovery indicators.
 - [x] Connect the virtual dashboard to a working recovery simulation and verify playback and scenario controls.
 - [x] Make location comparison spacious and verify image comparison.

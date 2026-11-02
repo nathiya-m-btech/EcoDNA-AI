@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { EcosystemState } from '@/lib/eco/simulation';
 import type { VirtualPlaceId } from '@/lib/eco/virtual-model';
 
-export default function MonitoringScene({ state, place, running }: { state: EcosystemState; place: VirtualPlaceId; running: boolean }) {
+export default function MonitoringScene({ state, place, running, className = 'h-[390px] w-full sm:h-[480px]' }: { state: EcosystemState; place: VirtualPlaceId; running: boolean; className?: string }) {
   const host = useRef<HTMLDivElement>(null);
   const latest = useRef({ state, running });
   latest.current = { state, running };
@@ -20,7 +20,7 @@ export default function MonitoringScene({ state, place, running }: { state: Ecos
       if (!context) return new THREE.Color();
       context.fillStyle = css.getPropertyValue(token).trim(); context.fillRect(0, 0, 1, 1);
       const data = context.getImageData(0, 0, 1, 1).data;
-      return new THREE.Color(data[0] / 255, data[1] / 255, data[2] / 255);
+      return new THREE.Color((data[0] ?? 0) / 255, (data[1] ?? 0) / 255, (data[2] ?? 0) / 255);
     };
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     el.appendChild(renderer.domElement);
@@ -81,5 +81,5 @@ export default function MonitoringScene({ state, place, running }: { state: Ecos
     draw();
     return () => { cancelAnimationFrame(frame); observer.disconnect(); controls.dispose(); geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); renderer.dispose(); renderer.domElement.remove(); };
   }, [place]);
-  return <div ref={host} className="h-[390px] w-full sm:h-[480px]" role="img" aria-label="Animated green landscape with a fixed monitoring sensor, trees, water and changing pollution">{failed && <p className="py-24 text-center text-muted-foreground">3D is unavailable. The simulation readings continue below.</p>}</div>;
+  return <div ref={host} className={className} role="img" aria-label="Animated green landscape with a fixed monitoring sensor, trees, water and changing pollution">{failed && <p className="py-24 text-center text-muted-foreground">3D is unavailable. The simulation readings continue below.</p>}</div>;
 }
