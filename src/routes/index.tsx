@@ -1,21 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   Brain,
   Dna,
-  Gauge,
-  Leaf,
   MapPin,
+  Play,
   ShieldCheck,
   Sparkles,
   Waves,
 } from "lucide-react";
 import { EcoLogo } from "@/components/eco/logo";
-import { Particles } from "@/components/eco/particles";
-import { ScoreRing } from "@/components/eco/score-ring";
-import { DnaHelix } from "@/components/eco/dna-helix";
-import { CountUp } from "@/components/eco/count-up";
 import { Button } from "@/components/ui/button";
+import heroVideo from "@/assets/Working_Model.mp4.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -72,108 +69,112 @@ const FEATURES = [
   },
 ] as const;
 
-function Landing() {
+/**
+ * Full-screen front page: the original EcoDNA video covers the entire
+ * viewport, autoplays muted and loops. A small welcome overlay sits on top.
+ */
+function VideoFrontPage() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [needsGesture, setNeedsGesture] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true; // autoplay only works muted in every browser
+    video.play().catch(() => setNeedsGesture(true));
+  }, []);
+
+  const play = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    setNeedsGesture(false);
+    video.play().catch(() => setNeedsGesture(true));
+  };
+
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      <div className="eco-grid pointer-events-none absolute inset-0 opacity-40" />
-      <div className="pointer-events-none absolute -left-40 -top-40 h-[420px] w-[420px] rounded-full bg-primary/20 blur-[130px]" />
-      <div className="pointer-events-none absolute -right-32 top-1/3 h-[380px] w-[380px] rounded-full bg-teal/20 blur-[130px]" />
-      <Particles count={26} />
+    <section className="relative h-screen min-h-[560px] w-full overflow-hidden bg-background">
+      <video
+        ref={videoRef}
+        className="absolute inset-0 h-full w-full object-cover"
+        src={heroVideo.url}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        onError={() => setFailed(true)}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-background/25 to-background/55" />
 
-      <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-4 py-5 sm:px-6">
-        <EcoLogo />
-        <nav className="flex items-center gap-2">
-          <Link to="/auth">
-            <Button variant="ghost" className="rounded-xl">
-              Sign in
-            </Button>
-          </Link>
-          <Link to="/auth">
-            <Button className="rounded-xl">Launch console</Button>
-          </Link>
-        </nav>
-      </header>
-
-      <main className="relative z-10">
-        <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-8 sm:px-6 lg:grid-cols-2 lg:pt-16">
-          <div className="animate-rise">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs text-muted-foreground">
-              <Leaf className="h-3.5 w-3.5 text-primary" /> Environmental Digital DNA · v1.0
-            </span>
-            <h1 className="font-display mt-5 text-4xl font-semibold leading-[1.05] sm:text-5xl lg:text-6xl">
-              Every place on earth has an{" "}
-              <span className="bg-gradient-to-r from-emerald via-lime to-teal bg-clip-text text-transparent">
-                environmental DNA
-              </span>
-              . We decode it.
-            </h1>
-            <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
-              EcoDNA AI fuses air, water, biodiversity, waste, climate and green-cover data into a
-              single living score — then predicts where it is heading and simulates how to heal it.
+      {failed && (
+        <div className="absolute inset-0 grid place-items-center bg-background">
+          <div className="text-center">
+            <EcoLogo />
+            <p className="mt-4 text-sm text-muted-foreground">
+              The welcome video could not load on this connection.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/auth">
+          </div>
+        </div>
+      )}
+
+      {needsGesture && !failed && (
+        <button
+          onClick={play}
+          aria-label="Play the welcome video"
+          className="absolute bottom-8 right-8 z-20 grid h-14 w-14 place-items-center rounded-full border border-primary/40 bg-background/80 text-primary backdrop-blur transition-transform hover:scale-105"
+        >
+          <Play className="ml-0.5 h-6 w-6" />
+        </button>
+      )}
+
+      <div className="pointer-events-none absolute inset-0 flex flex-col">
+        <header className="pointer-events-auto flex items-center justify-between px-4 py-5 sm:px-6">
+          <EcoLogo />
+          <nav className="flex items-center gap-2">
+            <Link to="/auth">
+              <Button variant="ghost" className="rounded-xl backdrop-blur">
+                Sign in
+              </Button>
+            </Link>
+          </nav>
+        </header>
+
+        <div className="pointer-events-auto mt-auto px-4 pb-10 sm:px-6 sm:pb-14">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
+              <Dna className="h-3.5 w-3.5 text-primary" /> Environmental Digital DNA · v1.0
+            </span>
+            <h1 className="font-display mt-4 text-4xl font-semibold leading-[1.05] sm:text-5xl lg:text-6xl">
+              Welcome to{" "}
+              <span className="bg-gradient-to-r from-emerald via-lime to-teal bg-clip-text text-transparent">
+                EcoDNA AI
+              </span>
+            </h1>
+            <p className="mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
+              Watch the platform come alive, then decode the environmental DNA of any place —
+              forecasts, hotspots and recovery pathways in one console.
+            </p>
+            <div className="mt-6">
+              <Link to="/welcome">
                 <Button size="lg" className="rounded-xl">
-                  Open the dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                  Explore <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <a href="#features">
-                <Button size="lg" variant="outline" className="rounded-xl">
-                  Explore capabilities
-                </Button>
-              </a>
-            </div>
-            <dl className="mt-10 grid max-w-lg grid-cols-3 gap-4">
-              {[
-                { k: "Factors decoded", v: 6 },
-                { k: "Forecast horizon", v: 90, suffix: "d" },
-                { k: "Model factors", v: 6 },
-              ].map((s) => (
-                <div key={s.k} className="glass rounded-2xl px-4 py-3">
-                  <dd className="font-display text-2xl font-semibold text-primary">
-                    <CountUp value={s.v} />
-                    {s.suffix ?? ""}
-                  </dd>
-                  <dt className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">
-                    {s.k}
-                  </dt>
-                </div>
-              ))}
-            </dl>
-          </div>
-
-          <div className="animate-rise glass relative rounded-3xl p-6 sm:p-8">
-            <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
-              <ScoreRing score={72} size={200} label="GOOD" />
-              <DnaHelix
-                className="w-[150px]"
-                height={260}
-                values={[
-                  { label: "Air", value: 68 },
-                  { label: "Water", value: 74 },
-                  { label: "Biodiversity", value: 63 },
-                  { label: "Waste", value: 58 },
-                  { label: "Weather", value: 81 },
-                  { label: "Green cover", value: 66 },
-                ]}
-              />
-            </div>
-            <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-              {[
-                ["Air quality", "68 / 100"],
-                ["Water quality", "74 / 100"],
-                ["Biodiversity", "63 / 100"],
-                ["Green cover", "66 / 100"],
-              ].map(([k, v]) => (
-                <div key={k} className="rounded-xl border border-border bg-secondary/40 px-3 py-2">
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{k}</p>
-                  <p className="font-display mt-0.5 font-semibold">{v}</p>
-                </div>
-              ))}
             </div>
           </div>
-        </section>
+        </div>
+      </div>
+    </section>
+  );
+}
 
+function Landing() {
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      <VideoFrontPage />
+
+      <main className="relative z-10">
         <section id="features" className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
           <h2 className="font-display text-2xl font-semibold sm:text-3xl">
             A complete environmental intelligence loop
@@ -197,7 +198,7 @@ function Landing() {
 
         <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6">
           <div className="glass flex flex-col items-center gap-5 rounded-3xl px-6 py-12 text-center">
-            <Gauge className="h-9 w-9 text-primary" />
+            <Brain className="h-9 w-9 text-primary" />
             <h2 className="font-display text-2xl font-semibold sm:text-3xl">
               Start decoding your region's environmental DNA
             </h2>
