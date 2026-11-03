@@ -77,6 +77,9 @@ function VideoFrontPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [needsGesture, setNeedsGesture] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
+  const [brightness, setBrightness] = useState(100);
+  const [textContrast, setTextContrast] = useState(100);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -84,6 +87,24 @@ function VideoFrontPage() {
     video.muted = true; // autoplay only works muted in every browser
     video.play().catch(() => setNeedsGesture(true));
   }, []);
+
+  // Restore saved video/text settings (browser storage only).
+  useEffect(() => {
+    const savedBrightness = Number(localStorage.getItem("ecodna-video-brightness"));
+    const savedContrast = Number(localStorage.getItem("ecodna-text-contrast"));
+    if (savedBrightness >= 40 && savedBrightness <= 160) setBrightness(savedBrightness);
+    if (savedContrast >= 50 && savedContrast <= 160) setTextContrast(savedContrast);
+  }, []);
+
+  const changeBrightness = (value: number) => {
+    setBrightness(value);
+    localStorage.setItem("ecodna-video-brightness", String(value));
+  };
+
+  const changeTextContrast = (value: number) => {
+    setTextContrast(value);
+    localStorage.setItem("ecodna-text-contrast", String(value));
+  };
 
   const play = () => {
     const video = videoRef.current;
