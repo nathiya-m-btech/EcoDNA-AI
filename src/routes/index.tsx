@@ -7,6 +7,7 @@ import {
   MapPin,
   Play,
   ShieldCheck,
+  SlidersHorizontal,
   Sparkles,
   Waves,
 } from "lucide-react";
