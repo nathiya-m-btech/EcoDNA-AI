@@ -225,7 +225,10 @@ function VideoFrontPage() {
         )}
 
         <div className="pointer-events-auto mt-auto px-4 pb-10 sm:px-6 sm:pb-14">
-          <div className="max-w-2xl">
+          <div
+            className="max-w-2xl"
+            style={{ textShadow: `0 2px ${Math.round((textContrast / 100) * 10)}px oklch(0.08 0.03 160 / 75%)` }}
+          >
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
               <Dna className="h-3.5 w-3.5 text-primary" /> Environmental Digital DNA · v1.0
             </span>
