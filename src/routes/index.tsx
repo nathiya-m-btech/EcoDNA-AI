@@ -105,7 +105,7 @@ function VideoFrontPage() {
         preload="auto"
         onError={() => setFailed(true)}
       />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-background/25 to-background/55" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-background/90 via-background/35 to-transparent" />
 
       {failed && (
         <div className="absolute inset-0 grid place-items-center bg-background">
