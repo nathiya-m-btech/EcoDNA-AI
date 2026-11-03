@@ -7,6 +7,7 @@ import {
   MapPin,
   Play,
   ShieldCheck,
+  SlidersHorizontal,
   Sparkles,
   Waves,
 } from "lucide-react";
@@ -77,6 +78,9 @@ function VideoFrontPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [needsGesture, setNeedsGesture] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
+  const [brightness, setBrightness] = useState(100);
+  const [textContrast, setTextContrast] = useState(100);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -84,6 +88,24 @@ function VideoFrontPage() {
     video.muted = true; // autoplay only works muted in every browser
     video.play().catch(() => setNeedsGesture(true));
   }, []);
+
+  // Restore saved video/text settings (browser storage only).
+  useEffect(() => {
+    const savedBrightness = Number(localStorage.getItem("ecodna-video-brightness"));
+    const savedContrast = Number(localStorage.getItem("ecodna-text-contrast"));
+    if (savedBrightness >= 40 && savedBrightness <= 160) setBrightness(savedBrightness);
+    if (savedContrast >= 50 && savedContrast <= 160) setTextContrast(savedContrast);
+  }, []);
+
+  const changeBrightness = (value: number) => {
+    setBrightness(value);
+    localStorage.setItem("ecodna-video-brightness", String(value));
+  };
+
+  const changeTextContrast = (value: number) => {
+    setTextContrast(value);
+    localStorage.setItem("ecodna-text-contrast", String(value));
+  };
 
   const play = () => {
     const video = videoRef.current;
@@ -97,6 +119,7 @@ function VideoFrontPage() {
       <video
         ref={videoRef}
         className="absolute inset-0 h-full w-full object-cover"
+        style={{ filter: `brightness(${brightness}%)` }}
         src={heroVideo.url}
         autoPlay
         muted
@@ -105,7 +128,15 @@ function VideoFrontPage() {
         preload="auto"
         onError={() => setFailed(true)}
       />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-background/90 via-background/35 to-transparent" />
+      {/* Welcome-text shade: scales with the text-contrast setting. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-background/90 via-background/35 to-transparent"
+        style={{ opacity: Math.min(textContrast / 100, 1) }}
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-background"
+        style={{ opacity: Math.max(0, (textContrast - 100) / 100) * 0.45 }}
+      />
 
       {failed && (
         <div className="absolute inset-0 grid place-items-center bg-background">
@@ -132,6 +163,16 @@ function VideoFrontPage() {
         <header className="pointer-events-auto flex items-center justify-between px-4 py-5 sm:px-6">
           <EcoLogo />
           <nav className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={controlsOpen ? "Hide display settings" : "Adjust video brightness and text contrast"}
+              aria-expanded={controlsOpen}
+              onClick={() => setControlsOpen((open) => !open)}
+              className="rounded-xl backdrop-blur"
+            >
+              <SlidersHorizontal className="h-5 w-5" />
+            </Button>
             <Link to="/auth">
               <Button variant="ghost" className="rounded-xl backdrop-blur">
                 Sign in
@@ -140,8 +181,54 @@ function VideoFrontPage() {
           </nav>
         </header>
 
+        {controlsOpen && (
+          <div className="pointer-events-auto absolute right-4 top-16 z-30 w-64 rounded-2xl glass p-4 sm:right-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Display settings
+            </p>
+            <label className="mt-3 block text-xs text-foreground">
+              <span className="flex items-center justify-between">
+                Video brightness
+                <span className="text-muted-foreground">{brightness}%</span>
+              </span>
+              <input
+                type="range"
+                min={40}
+                max={160}
+                step={5}
+                value={brightness}
+                onChange={(e) => changeBrightness(Number(e.target.value))}
+                aria-label="Video brightness"
+                className="mt-1.5 w-full accent-primary"
+              />
+            </label>
+            <label className="mt-3 block text-xs text-foreground">
+              <span className="flex items-center justify-between">
+                Welcome text contrast
+                <span className="text-muted-foreground">{textContrast}%</span>
+              </span>
+              <input
+                type="range"
+                min={50}
+                max={160}
+                step={5}
+                value={textContrast}
+                onChange={(e) => changeTextContrast(Number(e.target.value))}
+                aria-label="Welcome text contrast"
+                className="mt-1.5 w-full accent-primary"
+              />
+            </label>
+            <p className="mt-3 text-[11px] leading-snug text-muted-foreground">
+              Settings are remembered on this device.
+            </p>
+          </div>
+        )}
+
         <div className="pointer-events-auto mt-auto px-4 pb-10 sm:px-6 sm:pb-14">
-          <div className="max-w-2xl">
+          <div
+            className="max-w-2xl"
+            style={{ textShadow: `0 2px ${Math.round((textContrast / 100) * 10)}px oklch(0.08 0.03 160 / 75%)` }}
+          >
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
               <Dna className="h-3.5 w-3.5 text-primary" /> Environmental Digital DNA · v1.0
             </span>
