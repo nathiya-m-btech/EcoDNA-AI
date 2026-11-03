@@ -118,6 +118,7 @@ function VideoFrontPage() {
       <video
         ref={videoRef}
         className="absolute inset-0 h-full w-full object-cover"
+        style={{ filter: `brightness(${brightness}%)` }}
         src={heroVideo.url}
         autoPlay
         muted
@@ -126,7 +127,15 @@ function VideoFrontPage() {
         preload="auto"
         onError={() => setFailed(true)}
       />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-background/90 via-background/35 to-transparent" />
+      {/* Welcome-text shade: scales with the text-contrast setting. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-background/90 via-background/35 to-transparent"
+        style={{ opacity: Math.min(textContrast / 100, 1) }}
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-background"
+        style={{ opacity: Math.max(0, (textContrast - 100) / 100) * 0.45 }}
+      />
 
       {failed && (
         <div className="absolute inset-0 grid place-items-center bg-background">
