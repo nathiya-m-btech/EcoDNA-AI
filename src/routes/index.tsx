@@ -162,6 +162,16 @@ function VideoFrontPage() {
         <header className="pointer-events-auto flex items-center justify-between px-4 py-5 sm:px-6">
           <EcoLogo />
           <nav className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={controlsOpen ? "Hide display settings" : "Adjust video brightness and text contrast"}
+              aria-expanded={controlsOpen}
+              onClick={() => setControlsOpen((open) => !open)}
+              className="rounded-xl backdrop-blur"
+            >
+              <SlidersHorizontal className="h-5 w-5" />
+            </Button>
             <Link to="/auth">
               <Button variant="ghost" className="rounded-xl backdrop-blur">
                 Sign in
@@ -169,6 +179,49 @@ function VideoFrontPage() {
             </Link>
           </nav>
         </header>
+
+        {controlsOpen && (
+          <div className="pointer-events-auto absolute right-4 top-16 z-30 w-64 rounded-2xl glass p-4 sm:right-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Display settings
+            </p>
+            <label className="mt-3 block text-xs text-foreground">
+              <span className="flex items-center justify-between">
+                Video brightness
+                <span className="text-muted-foreground">{brightness}%</span>
+              </span>
+              <input
+                type="range"
+                min={40}
+                max={160}
+                step={5}
+                value={brightness}
+                onChange={(e) => changeBrightness(Number(e.target.value))}
+                aria-label="Video brightness"
+                className="mt-1.5 w-full accent-primary"
+              />
+            </label>
+            <label className="mt-3 block text-xs text-foreground">
+              <span className="flex items-center justify-between">
+                Welcome text contrast
+                <span className="text-muted-foreground">{textContrast}%</span>
+              </span>
+              <input
+                type="range"
+                min={50}
+                max={160}
+                step={5}
+                value={textContrast}
+                onChange={(e) => changeTextContrast(Number(e.target.value))}
+                aria-label="Welcome text contrast"
+                className="mt-1.5 w-full accent-primary"
+              />
+            </label>
+            <p className="mt-3 text-[11px] leading-snug text-muted-foreground">
+              Settings are remembered on this device.
+            </p>
+          </div>
+        )}
 
         <div className="pointer-events-auto mt-auto px-4 pb-10 sm:px-6 sm:pb-14">
           <div className="max-w-2xl">
